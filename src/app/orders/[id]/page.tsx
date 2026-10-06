@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { Check, Package, Truck } from "lucide-react";
 import { formatPrice, imageUrl, products } from "@/lib/catalog";
 import { useStore } from "@/lib/store";
@@ -17,16 +17,11 @@ const steps: { key: Order["status"]; label: string }[] = [
 export default function OrderDetailsPage() {
   const params = useParams<{ id: string }>();
   const orderId = decodeURIComponent(params.id);
-  const router = useRouter();
-  const { ready, signedIn, currentTime, orders, cancelOrder } = useStore();
+  const { ready, currentTime, orders, cancelOrder } = useStore();
   const [actionMessage, setActionMessage] = useState("");
   const order = orders.find((item) => item.id === orderId);
 
-  useEffect(() => {
-    if (ready && !signedIn) router.replace(`/sign-in?next=${encodeURIComponent(`/orders/${orderId}`)}`);
-  }, [ready, signedIn, router, orderId]);
-
-  if (!ready || !signedIn) return <div className="container page-shell"><p>Opening order details…</p></div>;
+  if (!ready) return <div className="container page-shell order-detail-loading" aria-busy="true"><p>Loading order details…</p></div>;
   if (!order) return <div className="container page-shell"><h1 className="page-title">Order not found</h1><p className="muted">This order may not be saved on this device.</p><Link className="button button-secondary" href="/orders">Back to Your Orders</Link></div>;
 
   const cancelled = order.status === "cancelled";

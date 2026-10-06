@@ -14,6 +14,7 @@ export function SiteFooter() {
         </div>
         <div>
           <strong>Make yourself at home</strong>
+          <Link href="/orders">Your Orders</Link>
           <Link href="/cart">Your cart</Link>
           <Link href="/search">Explore the shop</Link>
           <Link href="/">Help center</Link>

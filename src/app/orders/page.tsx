@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { ChevronRight, Package } from "lucide-react";
 import { formatPrice, imageUrl, products } from "@/lib/catalog";
 import { useStore } from "@/lib/store";
@@ -11,27 +10,29 @@ import type { Order } from "@/lib/types";
 type TimeRange = "30" | "90" | "all";
 
 function statusLabel(status: Order["status"]) {
-  return status === "processing" ? "Not yet shipped" : status[0].toUpperCase() + status.slice(1);
+  switch (status) {
+    case "processing": return "Not yet shipped";
+    case "shipped": return "Shipped";
+    case "delivered": return "Delivered";
+    case "cancelled": return "Cancelled";
+    default: return "Status unavailable";
+  }
 }
 
 export default function OrdersPage() {
-  const router = useRouter();
-  const { ready, signedIn, orders } = useStore();
+  const { ready, orders } = useStore();
   const [range, setRange] = useState<TimeRange>("all");
   const [rangeReferenceTime, setRangeReferenceTime] = useState(0);
 
-  useEffect(() => {
-    if (ready && !signedIn) router.replace("/sign-in?next=%2Forders");
-  }, [ready, signedIn, router]);
-
   const visibleOrders = useMemo(() => {
-    if (range === "all") return orders;
+    const newestFirst = [...orders].sort((first, second) => new Date(second.placedAt).getTime() - new Date(first.placedAt).getTime());
+    if (range === "all") return newestFirst;
     const days = Number(range);
     const cutoff = rangeReferenceTime - days * 24 * 60 * 60 * 1000;
-    return orders.filter((order) => new Date(order.placedAt).getTime() >= cutoff);
+    return newestFirst.filter((order) => new Date(order.placedAt).getTime() >= cutoff);
   }, [orders, range, rangeReferenceTime]);
 
-  if (!ready || !signedIn) return <div className="container page-shell"><p>Opening your orders…</p></div>;
+  if (!ready) return <OrdersLoadingSkeleton />;
 
   return <div className="container page-shell orders-page">
     <div className="breadcrumb"><Link href="/account">Your account</Link>　›　Your Orders</div>
@@ -64,7 +65,19 @@ export default function OrdersPage() {
           </div>
         </article>;
       })}
-      {!visibleOrders.length && <div className="empty-state"><h2>No orders in this time range</h2><p>Try another range or continue shopping.</p><Link className="button button-primary" href="/search">Explore the shop</Link></div>}
+      {!visibleOrders.length && <div className="empty-state"><h2>{orders.length ? "No orders in this time range" : "You haven’t placed any orders yet"}</h2><p>{orders.length ? "Try another range or continue shopping." : "When you place an order, it will appear here."}</p><Link className="button button-primary" href="/search">Continue shopping</Link></div>}
+    </div>
+  </div>;
+}
+
+function OrdersLoadingSkeleton() {
+  return <div className="container page-shell orders-page orders-loading" aria-busy="true" aria-label="Loading your orders">
+    <div className="orders-skeleton-title" />
+    <div className="orders-list">
+      {[0, 1, 2].map((item) => <div className="order-skeleton-card" key={item}>
+        <div className="order-skeleton-header"><i /><i /><i /><i /></div>
+        <div className="order-skeleton-body"><i /><div className="order-skeleton-thumbnails"><i /><i /><i /></div></div>
+      </div>)}
     </div>
   </div>;
 }

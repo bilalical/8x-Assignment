@@ -340,6 +340,16 @@ body:has(.checkout-page) .site-footer { display: none; }
 .orders-heading .muted, .order-details-heading .muted { margin: 7px 0 0; font-size: 13px; }
 .orders-range { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; }
 .orders-list { display: grid; gap: 18px; }
+.orders-skeleton-title, .order-skeleton-card i { display: block; border-radius: 6px; background: linear-gradient(100deg,#edf0f1 25%,#f7f8f8 45%,#edf0f1 65%); background-size: 220% 100%; animation: order-skeleton-shimmer 1.25s ease-in-out infinite; }
+.orders-skeleton-title { width: min(310px,70%); height: 35px; margin-bottom: 24px; }
+.order-skeleton-card { overflow: hidden; border: 1px solid #cbd5d9; border-radius: 12px; background: white; }
+.order-skeleton-header { display: grid; grid-template-columns: 1fr .65fr 1fr 1.35fr; gap: 15px; padding: 18px 17px; background: #f1f4f5; }
+.order-skeleton-header i { height: 30px; }
+.order-skeleton-body { display: grid; gap: 14px; padding: 18px 17px; }
+.order-skeleton-body > i { width: min(210px,65%); height: 18px; }
+.order-skeleton-thumbnails { display: flex; gap: 8px; }
+.order-skeleton-thumbnails i { width: 64px; height: 64px; }
+@keyframes order-skeleton-shimmer { to { background-position-x: -220%; } }
 .order-card { overflow: hidden; border: 1px solid #cbd5d9; border-radius: 12px; background: white; }
 .order-card-header { display: grid; grid-template-columns: 1fr .65fr 1fr 1.35fr; gap: 15px; padding: 13px 17px; background: #f1f4f5; }
 .order-card-header > div { display: grid; align-content: start; gap: 3px; }
@@ -566,6 +576,7 @@ body:has(.checkout-page) .site-footer { display: none; }
   .account-content-card { padding: 16px; }
   .orders-range { align-items: flex-start; flex-direction: column; }
   .order-card-header { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+  .order-skeleton-header { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
   .order-number { grid-column: 1 / -1; }
   .order-card-body { grid-template-columns: 1fr; }
   .order-details-button { grid-column: 1; grid-row: auto; justify-self: start; }

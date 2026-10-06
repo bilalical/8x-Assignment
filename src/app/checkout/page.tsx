@@ -55,7 +55,7 @@ function CheckoutForm({ initialAddress }: { initialAddress: ShippingAddress | nu
       setError("We couldn’t place your order. Please check your cart and try again.");
       return;
     }
-    router.push("/order-confirmation");
+    router.push(`/order-confirmation?order=${encodeURIComponent(orderId)}`);
   };
 
   return (

@@ -1,16 +1,31 @@
 "use client";
 
+import { Suspense, useEffect } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useStore } from "@/lib/store";
 import { formatPrice, products } from "@/lib/catalog";
 import { Check, PackageCheck } from "lucide-react";
 
 export default function OrderConfirmationPage() {
+  return <Suspense fallback={<div className="order-confirmation"><p>Preparing your order confirmation…</p></div>}>
+    <OrderConfirmationContent />
+  </Suspense>;
+}
+
+function OrderConfirmationContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { orders, ready } = useStore();
-  const order = orders[0];
+  const orderId = searchParams.get("order");
+  const order = orders.find((item) => item.id === orderId);
+
+  useEffect(() => {
+    if (ready && !orderId) router.replace("/orders");
+  }, [ready, orderId, router]);
 
   if (!ready) return <div className="order-confirmation"><p>Preparing your order confirmation…</p></div>;
-  if (!order) return <div className="order-confirmation"><h1>No order to show yet</h1><p>Your next favorite find is only a few clicks away.</p><Link className="button button-primary" href="/search">Explore the shop</Link></div>;
+  if (!order) return <section className="order-confirmation"><h1>Order not found</h1><p>This confirmation is unavailable. Your order history is still here.</p><Link className="button button-primary" href="/orders">Your Orders</Link></section>;
 
   return (
     <section className="order-confirmation">
@@ -28,6 +43,7 @@ export default function OrderConfirmationPage() {
       </div>
       <p className="checkout-hint">A mock order was saved locally. No payment was collected.</p>
       <Link className="button button-primary" href="/search">Continue shopping</Link>
+      <Link className="button button-secondary" href={`/orders/${encodeURIComponent(order.id)}`}>View order details</Link>
       <Link className="button button-secondary" href="/">Back to home</Link>
       <div className="order-contents">{order.items.map((line) => {
         const product = products.find((item) => item.id === line.productId);

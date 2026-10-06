@@ -141,7 +141,7 @@ export function SiteHeader() {
             {accountMessage && <p className="account-menu-note" role="status">{accountMessage}</p>}
           </div>}
         </div>
-        <Link className="header-orders" href="/order-confirmation"><small>Returns</small><strong>&amp; Orders</strong></Link>
+        <Link className="header-orders" href="/orders"><small>Returns</small><strong>&amp; Orders</strong></Link>
         <Link className="cart-link" href="/cart" aria-label={`Cart, ${count} items`}>
           <span className="cart-icon"><ShoppingCart size={30} />{count > 0 && <b key={count}>{count > 99 ? "99+" : count}</b>}</span><strong>Cart</strong>
         </Link>
@@ -160,7 +160,7 @@ export function SiteHeader() {
           <Link href="/search?q=Books">Books</Link>
           <Link href="/search?q=Beauty">Beauty &amp; care</Link>
           <Link href="/cart">Your cart</Link>
-          <Link className="mobile-orders-link" href="/order-confirmation">Returns &amp; Orders</Link>
+          <Link className="mobile-orders-link" href="/orders">Returns &amp; Orders</Link>
         </div>
       </nav>
       {allMenuOpen && <AllMenuDrawer onClose={closeAllMenu} />}

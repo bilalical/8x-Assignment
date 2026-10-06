@@ -51,6 +51,8 @@ const orderDate = (daysAgo: number) => {
   date.setDate(date.getDate() - daysAgo);
   return date.toISOString();
 };
+const normalizeOrderStatus = (status: unknown): Order["status"] =>
+  status === "shipped" || status === "delivered" || status === "cancelled" ? status : "processing";
 const seededOrders: Order[] = [
   {
     id: "ORD-PAST-DELIVERED",
@@ -101,7 +103,14 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     const timer = window.setTimeout(() => {
       try {
         const saved = window.localStorage.getItem(STORAGE_KEY);
-        if (saved) setData({ ...initialData, ...JSON.parse(saved) as Partial<StoreData> });
+        if (saved) {
+          const savedData = JSON.parse(saved) as Partial<StoreData>;
+          const savedOrders = Array.isArray(savedData.orders)
+            ? savedData.orders.map((order) => ({ ...order, status: normalizeOrderStatus(order.status) }))
+            : [];
+          const ordersById = new Map([...seededOrders, ...savedOrders].map((order) => [order.id, order]));
+          setData({ ...initialData, ...savedData, orders: [...ordersById.values()] });
+        }
       } catch {
         window.localStorage.removeItem(STORAGE_KEY);
       }
