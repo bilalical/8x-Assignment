@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { products } from "./catalog";
-import type { CartLine, Order, Product, ShippingAddress } from "./types";
+import type { CartLine, Order, Product, ReturnRequest, ShippingAddress } from "./types";
 
 type StoreData = {
   cart: CartLine[];
@@ -17,9 +17,12 @@ type CartToast = { id: number; product: Product; quantity: number };
 
 type StoreContextType = StoreData & {
   ready: boolean;
+  currentTime: number | null;
   signIn: (name: string) => void;
   signOut: () => void;
   saveAddress: (address: ShippingAddress) => void;
+  requestReturn: (orderId: string, request: Omit<ReturnRequest, "id" | "requestedAt">) => boolean;
+  cancelOrder: (orderId: string) => boolean;
   cartToast: CartToast | null;
   addToCart: (product: Product, quantity?: number) => void;
   dismissCartToast: () => void;
@@ -86,6 +89,7 @@ const priceById = Object.fromEntries(products.map((product) => [product.id, prod
 export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [data, setData] = useState<StoreData>(initialData);
   const [ready, setReady] = useState(false);
+  const [currentTime, setCurrentTime] = useState<number | null>(null);
   const [cartToast, setCartToast] = useState<CartToast | null>(null);
   const noticeId = useRef(0);
 
@@ -97,6 +101,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       } catch {
         window.localStorage.removeItem(STORAGE_KEY);
       }
+      setCurrentTime(Date.now());
       setReady(true);
     }, 0);
     return () => window.clearTimeout(timer);
@@ -132,6 +137,41 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const saveAddress = useCallback((address: ShippingAddress) => {
     setData((previous) => ({ ...previous, address }));
   }, []);
+  const requestReturn = useCallback((orderId: string, request: Omit<ReturnRequest, "id" | "requestedAt">) => {
+    const order = data.orders.find((item) => item.id === orderId);
+    const age = order ? Date.now() - new Date(order.placedAt).getTime() : -1;
+    const withinReturnWindow = age >= 0 && age <= 30 * 24 * 60 * 60 * 1000;
+    if (!order || order.status !== "delivered" || !withinReturnWindow || order.returnRequest || !request.items.length ||
+      !request.reason.trim() || !["refund", "replacement"].includes(request.resolution)) return false;
+    const selectedCounts = new Map<string, number>();
+    for (const selected of request.items) {
+      selectedCounts.set(selected.productId, (selectedCounts.get(selected.productId) ?? 0) + selected.quantity);
+    }
+    const validItems = [...selectedCounts].every(([productId, quantity]) => {
+      const purchased = order.items.find((line) => line.productId === productId);
+      return purchased && quantity > 0 && quantity <= purchased.quantity;
+    });
+    if (!validItems) return false;
+    const returnRequest: ReturnRequest = {
+      ...request,
+      id: `RET-${Date.now().toString(36).toUpperCase()}`,
+      requestedAt: new Date().toISOString(),
+    };
+    setData((previous) => ({
+      ...previous,
+      orders: previous.orders.map((item) => item.id === orderId ? { ...item, returnRequest } : item),
+    }));
+    return true;
+  }, [data.orders]);
+  const cancelOrder = useCallback((orderId: string) => {
+    const order = data.orders.find((item) => item.id === orderId);
+    if (!order || order.status !== "processing") return false;
+    setData((previous) => ({
+      ...previous,
+      orders: previous.orders.map((item) => item.id === orderId ? { ...item, status: "cancelled" } : item),
+    }));
+    return true;
+  }, [data.orders]);
 
   const setQuantity = useCallback((productId: string, quantity: number) => {
     setData((previous) => ({
@@ -181,8 +221,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   }, [data]);
 
   const value = useMemo(
-    () => ({ ...data, ready, cartToast, addToCart, dismissCartToast, signIn, signOut, saveAddress, setQuantity, removeFromCart, saveToList, createOrder }),
-    [data, ready, cartToast, addToCart, dismissCartToast, signIn, signOut, saveAddress, setQuantity, removeFromCart, saveToList, createOrder],
+    () => ({ ...data, ready, currentTime, cartToast, addToCart, dismissCartToast, signIn, signOut, saveAddress, requestReturn, cancelOrder, setQuantity, removeFromCart, saveToList, createOrder }),
+    [data, ready, currentTime, cartToast, addToCart, dismissCartToast, signIn, signOut, saveAddress, requestReturn, cancelOrder, setQuantity, removeFromCart, saveToList, createOrder],
   );
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }

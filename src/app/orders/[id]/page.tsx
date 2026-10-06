@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { Check, Package, Truck } from "lucide-react";
@@ -18,7 +18,8 @@ export default function OrderDetailsPage() {
   const params = useParams<{ id: string }>();
   const orderId = decodeURIComponent(params.id);
   const router = useRouter();
-  const { ready, signedIn, orders } = useStore();
+  const { ready, signedIn, currentTime, orders, cancelOrder } = useStore();
+  const [actionMessage, setActionMessage] = useState("");
   const order = orders.find((item) => item.id === orderId);
 
   useEffect(() => {
@@ -47,6 +48,8 @@ export default function OrderDetailsPage() {
         </div>;
       })}
     </div>
+    {order.returnRequest && <div className="return-status-note"><strong>Return requested</strong><span>{order.returnRequest.resolution === "refund" ? "Refund" : "Replacement"} · {order.returnRequest.reason}</span><Link href={`/returns/${encodeURIComponent(order.id)}/confirmation`}>View return confirmation</Link></div>}
+    {actionMessage && <p className="success-message order-action-message" role="status">{actionMessage}</p>}
     <div className="order-details-grid">
       <section className="account-content-card order-detail-items"><h2>Items in this order</h2>
         {items.map(({ product, quantity }) => <article className="order-detail-item" key={product.id}>
@@ -55,6 +58,15 @@ export default function OrderDetailsPage() {
         </article>)}
       </section>
       <aside className="order-detail-side">
+        {order.status === "delivered" && !order.returnRequest && <section className="account-content-card">
+          <h2>Returns</h2>
+          {currentTime !== null && currentTime - new Date(order.placedAt).getTime() >= 0 && currentTime - new Date(order.placedAt).getTime() <= 30 * 24 * 60 * 60 * 1000
+            ? <Link className="button button-secondary button-wide" href={`/returns/${encodeURIComponent(order.id)}`}>Return or replace items</Link>
+            : <p className="muted">Return window closed</p>}
+        </section>}
+        {order.status === "processing" && <section className="account-content-card">
+          <h2>Order actions</h2><button className="button button-secondary" onClick={() => setActionMessage(cancelOrder(order.id) ? "This order has been cancelled." : "This order can no longer be cancelled.")}>Cancel order</button>
+        </section>}
         <section className="account-content-card"><h2>Shipping address</h2><address>{order.address.fullName}<br />{order.address.street}{order.address.apartment && <><br />{order.address.apartment}</>}<br />{order.address.city}, {order.address.state} {order.address.zip}<br />{order.address.phone}</address></section>
         <section className="account-content-card"><h2>Payment summary</h2>
           <div className="subtotal-line"><span>Items</span><strong>{formatPrice(order.subtotal)}</strong></div>

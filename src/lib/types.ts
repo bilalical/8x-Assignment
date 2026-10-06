@@ -40,4 +40,13 @@ export type Order = {
   status: "processing" | "shipped" | "delivered" | "cancelled";
   discountCode?: string;
   discountAmount?: number;
+  returnRequest?: ReturnRequest;
+};
+
+export type ReturnRequest = {
+  id: string;
+  items: CartLine[];
+  reason: string;
+  resolution: "refund" | "replacement";
+  requestedAt: string;
 };

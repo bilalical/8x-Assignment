@@ -54,7 +54,7 @@ export default function OrdersPage() {
             <div className="order-number"><small>ORDER # {order.id}</small><Link href={`/orders/${encodeURIComponent(order.id)}`}>View order details <ChevronRight size={13} /></Link></div>
           </header>
           <div className="order-card-body">
-            <div className="order-status"><Package size={17} /><strong>{statusLabel(order.status)}</strong>{order.status === "delivered" && <span>Delivered</span>}</div>
+            <div className="order-status"><Package size={17} /><strong>{order.returnRequest ? "Return requested" : statusLabel(order.status)}</strong>{order.status === "delivered" && !order.returnRequest && <span>Delivered</span>}</div>
             <div className="order-card-items">
               {orderProducts.map(({ line, product }) => <Link className="order-item-thumb" key={line.productId} href={`/product/${product.id}`} title={`${line.quantity} × ${product.title}`}>
                 <img src={imageUrl(product.image, 180)} alt={product.title} /><span>{line.quantity} × {product.title}</span>
