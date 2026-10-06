@@ -81,3 +81,15 @@ Everything from 16:22PKT onward is captured live.
 **Recovered logs:** I exported the earlier chats from VS Code's chat history (Chat: Export Chat). The raw files are in `.agent-logs/recovered/`, with a README. They are not live captures and do not follow the standard log format. They cover Phase 1 / Round 2. I did not see any gaps.
 
 I did not edit, reconstruct, or backfill any log entry.
+
+## Capture gap: later work in the same chat
+
+**Status:** Live capture was not working for the period after the last captured entry listed above, up to the time of writing.
+
+**What happened:** After the last working capture, I kept building in the same long-running chat. That chat was not being captured by the hook, so its prompts and responses were not written to `.agent-logs/`. This includes Prompt B (orders, auth, addresses), the four-fix prompt, the orders-page fix prompt, and any other prompts sent in that chat after the last captured entry. At one point I got capture working in a fresh chat, then lost it again when I went back to sending prompts in the problem chat.
+
+**Cause:** The problem was specific to that one chat, not the hook setup. The short "CAPTURE TEST" prompts (#1, #2, #3), each sent in a fresh chat, were all captured with both prompt and response, including canary #3 in the VS Code agent panel with the current hook config. My earlier theory that the hook config was in the wrong format was incorrect. I did not determine why that particular chat was not captured.
+
+**Workaround after identifying the cause:** I stopped using the problem chat and started fresh chats for the remaining prompts, checking `.agent-logs/` after each turn to confirm capture. I also used Chat: Export Chat... on the problem chat and saved the raw export, unedited, in `.agent-logs/recovered/`.
+
+**What is missing:** The prompts and responses from the problem chat were not captured live by the hook. The exported chat file in `.agent-logs/recovered/` is the only record of that work. It is a manual export made after the fact, not a live capture, and I have not edited, recreated, or backfilled anything in it.
