@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
+import { AddToCartToast } from "@/components/add-to-cart-toast";
 import { StoreProvider } from "@/lib/store";
 import "./globals.css";
 
@@ -17,6 +18,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <div id="top" />
           <SiteHeader />
           <main>{children}</main>
+          <AddToCartToast />
           <SiteFooter />
         </StoreProvider>
       </body>

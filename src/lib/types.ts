@@ -9,6 +9,9 @@ export interface Product {
   material: string;
   prime: boolean;
   badge?: string;
+  condition?: string;
+  inStock?: boolean;
+  discountPercent?: number;
   image: string;
   description: string;
 }

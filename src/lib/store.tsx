@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { products } from "./catalog";
 import type { CartLine, Order, Product, ShippingAddress } from "./types";
 
@@ -11,9 +11,13 @@ type StoreData = {
   address: ShippingAddress | null;
 };
 
+type CartToast = { id: number; product: Product; quantity: number };
+
 type StoreContextType = StoreData & {
   ready: boolean;
+  cartToast: CartToast | null;
   addToCart: (product: Product, quantity?: number) => void;
+  dismissCartToast: () => void;
   setQuantity: (productId: string, quantity: number) => void;
   removeFromCart: (productId: string) => void;
   saveToList: (listName: string, productId: string) => void;
@@ -28,6 +32,8 @@ const priceById = Object.fromEntries(products.map((product) => [product.id, prod
 export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [data, setData] = useState<StoreData>(initialData);
   const [ready, setReady] = useState(false);
+  const [cartToast, setCartToast] = useState<CartToast | null>(null);
+  const noticeId = useRef(0);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -58,7 +64,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           : [...previous.cart, { productId: product.id, quantity }],
       };
     });
+    setCartToast({ id: ++noticeId.current, product, quantity });
   }, []);
+  const dismissCartToast = useCallback(() => setCartToast(null), []);
 
   const setQuantity = useCallback((productId: string, quantity: number) => {
     setData((previous) => ({
@@ -103,8 +111,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   }, [data]);
 
   const value = useMemo(
-    () => ({ ...data, ready, addToCart, setQuantity, removeFromCart, saveToList, createOrder }),
-    [data, ready, addToCart, setQuantity, removeFromCart, saveToList, createOrder],
+    () => ({ ...data, ready, cartToast, addToCart, dismissCartToast, setQuantity, removeFromCart, saveToList, createOrder }),
+    [data, ready, cartToast, addToCart, dismissCartToast, setQuantity, removeFromCart, saveToList, createOrder],
   );
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { BookmarkPlus, Check, ShieldCheck, Truck } from "lucide-react";
+import { BookmarkPlus, ShieldCheck, Truck } from "lucide-react";
 import type { Product } from "@/lib/types";
 import { formatPrice, imageUrl } from "@/lib/catalog";
 import { useStore } from "@/lib/store";
@@ -12,11 +12,8 @@ export function ProductDetail({ product }: { product: Product }) {
   const [zoomed, setZoomed] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [showList, setShowList] = useState(false);
-  const [added, setAdded] = useState(false);
   const add = () => {
     addToCart(product, quantity);
-    setAdded(true);
-    window.setTimeout(() => setAdded(false), 1800);
   };
 
   return (
@@ -57,7 +54,7 @@ export function ProductDetail({ product }: { product: Product }) {
             {[1,2,3,4,5,6,7,8,9,10].map((number) => <option key={number} value={number}>{number}</option>)}
           </select>
           <div className="purchase-actions">
-            <button className="button button-primary button-wide" onClick={add}>{added ? <><Check size={16} /> Added to cart</> : "Add to Cart"}</button>
+            <button className="button button-primary button-wide" onClick={add}>Add to Cart</button>
           </div>
           <div className="feature-list">
             <span><Truck size={15} /> Free returns within 30 days.</span>
