@@ -9,12 +9,17 @@ type StoreData = {
   lists: Record<string, string[]>;
   orders: Order[];
   address: ShippingAddress | null;
+  signedIn: boolean;
+  accountName: string;
 };
 
 type CartToast = { id: number; product: Product; quantity: number };
 
 type StoreContextType = StoreData & {
   ready: boolean;
+  signIn: (name: string) => void;
+  signOut: () => void;
+  saveAddress: (address: ShippingAddress) => void;
   cartToast: CartToast | null;
   addToCart: (product: Product, quantity?: number) => void;
   dismissCartToast: () => void;
@@ -25,7 +30,7 @@ type StoreContextType = StoreData & {
 };
 
 const STORAGE_KEY = "everyday-market-store-v1";
-const initialData: StoreData = { cart: [], lists: { "Shopping List": [] }, orders: [], address: null };
+const initialData: StoreData = { cart: [], lists: { "Shopping List": [] }, orders: [], address: null, signedIn: false, accountName: "" };
 const StoreContext = createContext<StoreContextType | null>(null);
 const priceById = Object.fromEntries(products.map((product) => [product.id, product.price]));
 
@@ -67,6 +72,17 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setCartToast({ id: ++noticeId.current, product, quantity });
   }, []);
   const dismissCartToast = useCallback(() => setCartToast(null), []);
+  const signIn = useCallback((name: string) => {
+    const normalizedName = name.trim();
+    if (!normalizedName) return;
+    setData((previous) => ({ ...previous, signedIn: true, accountName: normalizedName }));
+  }, []);
+  const signOut = useCallback(() => {
+    setData((previous) => ({ ...previous, signedIn: false, accountName: "" }));
+  }, []);
+  const saveAddress = useCallback((address: ShippingAddress) => {
+    setData((previous) => ({ ...previous, address }));
+  }, []);
 
   const setQuantity = useCallback((productId: string, quantity: number) => {
     setData((previous) => ({
@@ -111,8 +127,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   }, [data]);
 
   const value = useMemo(
-    () => ({ ...data, ready, cartToast, addToCart, dismissCartToast, setQuantity, removeFromCart, saveToList, createOrder }),
-    [data, ready, cartToast, addToCart, dismissCartToast, setQuantity, removeFromCart, saveToList, createOrder],
+    () => ({ ...data, ready, cartToast, addToCart, dismissCartToast, signIn, signOut, saveAddress, setQuantity, removeFromCart, saveToList, createOrder }),
+    [data, ready, cartToast, addToCart, dismissCartToast, signIn, signOut, saveAddress, setQuantity, removeFromCart, saveToList, createOrder],
   );
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }

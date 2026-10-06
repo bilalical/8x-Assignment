@@ -304,6 +304,37 @@ body:has(.checkout-page) .site-footer { display: none; }
 .order-details { margin: 20px 0; padding: 16px; border-radius: 10px; background: #f5f7f8; text-align: left; font-size: 12px; }
 .order-details div { display: flex; justify-content: space-between; gap: 12px; margin: 6px 0; }
 .order-confirmation .button { margin: 4px; }
+.account-page { max-width: 1040px; }
+.account-page-heading { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 22px; }
+.account-page-heading .eyebrow { margin-bottom: 4px; }
+.account-page-heading .muted { margin: 7px 0 0; }
+.account-card-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
+.account-card, .account-content-card { display: flex; align-items: flex-start; gap: 16px; padding: 20px; border: 1px solid var(--line); border-radius: var(--radius-md); background: white; box-shadow: 0 2px 8px rgba(23,37,48,.03); }
+.account-card { min-height: 112px; color: var(--ink); transition: border-color .15s ease, box-shadow .15s ease; }
+.account-card:hover { border-color: #9cb8b5; box-shadow: var(--shadow-soft); }
+.account-card > svg { flex: 0 0 auto; color: var(--teal-700); }
+.account-card > span { display: grid; gap: 5px; }
+.account-card strong { font-size: 15px; }
+.account-card small { color: var(--muted); font-size: 12px; }
+.account-content-card { display: block; margin-top: 20px; }
+.account-content-card h2 { margin: 0 0 15px; font-size: 18px; }
+.account-address-form { max-width: 750px; }
+.account-list-items { display: grid; gap: 10px; }
+.account-list-items > a { display: grid; grid-template-columns: 72px minmax(0,1fr); align-items: center; gap: 12px; padding: 9px; border: 1px solid var(--line); border-radius: 9px; }
+.account-list-items img { width: 72px; height: 68px; border-radius: 7px; object-fit: cover; }
+.account-list-items span { display: grid; gap: 5px; }
+.account-list-items strong { font-size: 13px; }
+.account-list-items small { color: var(--muted); font-size: 11px; }
+.account-back-link { display: inline-block; margin-top: 18px; }
+.account-sign-in { max-width: 480px; }
+.account-sign-in-logo { margin: 0 auto 14px; color: var(--navy-950); }
+.sign-in-card { display: grid !important; gap: 13px !important; }
+.sign-in-card h1 { margin: 0; font-size: 25px; }
+.sign-in-card .checkout-hint, .sign-in-disclaimer { margin: 0; color: var(--muted); font-size: 12px; }
+.sign-in-disclaimer { padding-top: 12px; border-top: 1px solid var(--line); line-height: 1.55; }
+.account-menu-note { margin: 5px 8px 8px; color: var(--muted); font-size: 11px; }
+.account-menu > button, .account-menu > a { cursor: pointer; }
+.account-menu > a[href="/account"]:first-of-type { font-weight: 700; }
 .cart-toast { position: fixed; right: 20px; bottom: 20px; z-index: 90; width: min(370px, calc(100vw - 28px)); padding: 16px; border: 1px solid var(--line); border-radius: 14px; background: white; box-shadow: 0 14px 42px rgba(16,24,32,.24); animation: cart-toast-enter .24s ease-out both; }
 .cart-toast-heading, .cart-toast-heading > span { display: flex; align-items: center; }
 .cart-toast-heading { justify-content: space-between; gap: 10px; color: var(--success); font-size: 14px; font-weight: 750; }

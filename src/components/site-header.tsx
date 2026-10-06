@@ -13,7 +13,7 @@ const quickSearches = ["wireless headphones", "coffee maker", "desk lamp", "wate
 
 export function SiteHeader() {
   const router = useRouter();
-  const { cart, lists } = useStore();
+  const { cart, lists, signedIn, accountName, signOut } = useStore();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("All");
   const [focused, setFocused] = useState(false);
@@ -120,12 +120,12 @@ export function SiteHeader() {
         <div className="account-menu-wrap" ref={accountRef}>
           <button className="header-account" aria-label="Account and lists" aria-expanded={accountOpen} aria-controls="account-menu" onClick={() => { setAccountOpen(!accountOpen); setAccountMessage(""); }}>
             <CircleUserRound className="account-icon" size={24} />
-            <span className="account-copy"><small>Hello, Muhammad</small><strong>Account &amp; Lists <ChevronDown size={12} /></strong></span>
+            <span className="account-copy"><small>Hello, {signedIn ? accountName : "sign in"}</small><strong>Account &amp; Lists <ChevronDown size={12} /></strong></span>
           </button>
           {accountOpen && <div className="account-menu" id="account-menu" role="menu">
-            <button role="menuitem" onClick={() => setAccountMessage("Sign-in is not available in this local demo.")}>Sign in</button>
-            <Link role="menuitem" href="/cart" onClick={() => setAccountOpen(false)}>Your account</Link>
-            <Link role="menuitem" href="/order-confirmation" onClick={() => setAccountOpen(false)}>Returns &amp; Orders</Link>
+            {!signedIn && <Link role="menuitem" href="/sign-in" onClick={() => setAccountOpen(false)}>Sign in</Link>}
+            <Link role="menuitem" href="/account" onClick={() => setAccountOpen(false)}>Your account</Link>
+            <Link role="menuitem" href="/orders" onClick={() => setAccountOpen(false)}>Returns &amp; Orders</Link>
             <button role="menuitem" aria-expanded={listsOpen} onClick={() => setListsOpen(!listsOpen)}>Your lists <ChevronDown size={14} /></button>
             {listsOpen && <div className="account-lists">
               {Object.entries(lists).map(([name, ids]) => (
@@ -137,6 +137,7 @@ export function SiteHeader() {
                 </section>
               ))}
             </div>}
+            {signedIn && <button role="menuitem" onClick={() => { signOut(); setAccountOpen(false); router.push("/"); }}>Sign out</button>}
             {accountMessage && <p className="account-menu-note" role="status">{accountMessage}</p>}
           </div>}
         </div>

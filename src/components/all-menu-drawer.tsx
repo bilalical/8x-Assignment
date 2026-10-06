@@ -22,8 +22,7 @@ type View = { department: string } | { list: string } | null;
 export function AllMenuDrawer({ onClose }: { onClose: () => void }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { lists } = useStore();
-  const [signedIn, setSignedIn] = useState(true);
+  const { lists, signedIn, accountName, signOut } = useStore();
   const [view, setView] = useState<View>(null);
   const [showAllDepartments, setShowAllDepartments] = useState(false);
   const drawerRef = useRef<HTMLElement>(null);
@@ -88,7 +87,7 @@ export function AllMenuDrawer({ onClose }: { onClose: () => void }) {
       <aside className="all-menu-drawer" ref={drawerRef} role="dialog" aria-modal="true" aria-label="All departments and account menu">
         <div className="all-menu-header">
           <CircleUserRound size={27} aria-hidden="true" />
-          <strong>Hello, {signedIn ? "Muhammad" : "sign in"}</strong>
+          <strong>Hello, {signedIn ? accountName : "sign in"}</strong>
           <button className="all-menu-close" ref={closeRef} onClick={onClose} aria-label="Close menu"><X size={23} /></button>
         </div>
         <div className="all-menu-content">
@@ -125,11 +124,13 @@ export function AllMenuDrawer({ onClose }: { onClose: () => void }) {
             <section className="all-menu-section">
               <h2>Help &amp; Settings</h2>
               <div className="all-menu-section-list">
-                <Link href="/cart" onClick={closeAfterNavigation}>Your Account<ChevronRight size={18} /></Link>
-                <Link href="/order-confirmation" onClick={closeAfterNavigation}>Your Orders<ChevronRight size={18} /></Link>
+                <Link href="/account" onClick={closeAfterNavigation}>Your Account<ChevronRight size={18} /></Link>
+                <Link href="/orders" onClick={closeAfterNavigation}>Your Orders<ChevronRight size={18} /></Link>
                 <button onClick={() => setView({ list: Object.keys(lists)[0] ?? "Shopping List" })}>Your Lists<ChevronRight size={18} /></button>
                 <Link href="/#top" onClick={closeAfterNavigation}>Customer Service<ChevronRight size={18} /></Link>
-                <button onClick={() => setSignedIn(!signedIn)}>{signedIn ? "Sign out" : "Sign in"}<ChevronRight size={18} /></button>
+                {signedIn
+                  ? <button onClick={signOut}>Sign out<ChevronRight size={18} /></button>
+                  : <Link href="/sign-in" onClick={closeAfterNavigation}>Sign in<ChevronRight size={18} /></Link>}
               </div>
             </section>
           </>}
