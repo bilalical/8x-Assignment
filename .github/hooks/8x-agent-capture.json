@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "hooks": {
+    "userPromptSubmitted": [
+      {
+        "type": "command",
+        "exec": "powershell.exe",
+        "args": [
+          "-NoProfile",
+          "-ExecutionPolicy",
+          "Bypass",
+          "-File",
+          ".github/hooks/capture-agent-log.ps1",
+          "-Event",
+          "userPromptSubmitted"
+        ],
+        "cwd": ".",
+        "timeoutSec": 10
+      }
+    ],
+    "agentStop": [
+      {
+        "type": "command",
+        "exec": "powershell.exe",
+        "args": [
+          "-NoProfile",
+          "-ExecutionPolicy",
+          "Bypass",
+          "-File",
+          ".github/hooks/capture-agent-log.ps1",
+          "-Event",
+          "agentStop"
+        ],
+        "cwd": ".",
+        "timeoutSec": 30
+      }
+    ],
+    "sessionEnd": [
+      {
+        "type": "command",
+        "exec": "powershell.exe",
+        "args": [
+          "-NoProfile",
+          "-ExecutionPolicy",
+          "Bypass",
+          "-File",
+          ".github/hooks/capture-agent-log.ps1",
+          "-Event",
+          "sessionEnd"
+        ],
+        "cwd": ".",
+        "timeoutSec": 10
+      }
+    ]
+  }
+}
