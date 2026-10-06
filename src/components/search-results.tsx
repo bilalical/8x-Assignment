@@ -51,6 +51,7 @@ export function SearchResults({ initialQuery, initialCategory }: { initialQuery:
   const [maximumPrice, setMaximumPrice] = useState<number | null>(null);
   const [sort, setSort] = useState("featured");
   const [showMore, setShowMore] = useState<Record<string, boolean>>({});
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
 
   const searchResults = useMemo(() => searchProducts(initialQuery), [initialQuery]);
   const matches = (product: Product, except?: FilterGroup) => {
@@ -114,12 +115,12 @@ export function SearchResults({ initialQuery, initialCategory }: { initialQuery:
   const priceMin = Math.max(minBound, Math.min(maxBound, minimumPrice ?? minBound));
   const priceMax = Math.max(priceMin, Math.min(maxBound, maximumPrice ?? maxBound));
   const priceSpan = maxBound - minBound || 1;
-  const priceBuckets = Array.from({ length: 8 }, (_, index) => {
-    const low = minBound + priceSpan * index / 8;
-    const high = index === 7 ? maxBound : minBound + priceSpan * (index + 1) / 8;
-    const count = priceProducts.filter((product) => product.price >= low && (index === 7 ? product.price <= high : product.price < high)).length;
-    const outside = high < priceMin || low > priceMax;
-    return { low, high, count, outside };
+  const priceBuckets = Array.from({ length: 20 }, (_, index) => {
+    const low = minBound + priceSpan * index / 20;
+    const high = index === 19 ? maxBound : minBound + priceSpan * (index + 1) / 20;
+    const count = priceProducts.filter((product) => product.price >= low && (index === 19 ? product.price <= high : product.price < high)).length;
+    const selected = high >= priceMin && low <= priceMax;
+    return { low, high, count, selected };
   });
   const hasPriceFilter = priceMin > minBound || priceMax < maxBound;
   const activeFilters: { label: string; clear: () => void }[] = [
@@ -149,8 +150,11 @@ export function SearchResults({ initialQuery, initialCategory }: { initialQuery:
       {options.length > 6 && <button className="see-more-button" onClick={() => setShowMore((current) => ({ ...current, [group]: !expanded }))}>{expanded ? "See less" : "See more"}</button>}
     </div>;
   };
-  const renderGroup = (title: string, group: FilterGroup, options: FilterOption[], children: React.ReactNode) => options.length
-    ? <details className="filter-group" key={group}><summary>{title}<ChevronDown size={15} /></summary>{children}</details>
+  const renderGroup = (title: string, group: FilterGroup, options: FilterOption[], children: React.ReactNode, initiallyOpen = false) => options.length
+    ? <details className="filter-group" key={group} open={openGroups[group] ?? initiallyOpen} onToggle={(event) => {
+      const isOpen = event.currentTarget.open;
+      setOpenGroups((current) => ({ ...current, [group]: isOpen }));
+    }}><summary>{title}<ChevronDown size={15} /></summary>{children}</details>
     : null;
   const setPriceFromSlider = (edge: "min" | "max", value: number) => {
     if (edge === "min") {
@@ -175,6 +179,47 @@ export function SearchResults({ initialQuery, initialCategory }: { initialQuery:
     }
   };
 
+  const filterGroups = <div className="filters-grid">
+    {renderGroup("Department", "category", departmentOptions, <div className="filter-options">
+      <label><input type="radio" name="category" checked={!category} onChange={() => setCategory("")} /><span className="filter-option-label">All departments</span><span className="filter-count">({candidatesFor("category").length})</span></label>
+      {departmentOptions.map((option) => <label key={option.value}><input type="radio" name="category" checked={category === option.value} onChange={() => setCategory(option.value)} /><span className="filter-option-label">{option.label}</span><span className="filter-count">({option.count})</span></label>)}
+    </div>, true)}
+    {renderGroup("Customer reviews", "rating", ratingOptions, <div className="filter-options">
+      {ratingOptions.map((option) => <label key={option.value}><input type="radio" name="rating" checked={minimumRating === Number(option.value)} onChange={() => setMinimumRating(Number(option.value))} /><span className="rating-stars">{"★".repeat(Number(option.value))}{"☆".repeat(5 - Number(option.value))}</span><span className="filter-option-label">{option.label}</span><span className="filter-count">({option.count})</span></label>)}
+      <label><input type="radio" name="rating" checked={minimumRating === 0} onChange={() => setMinimumRating(0)} /><span className="filter-option-label">Any rating</span><span className="filter-count">({candidatesFor("rating").length})</span></label>
+    </div>, true)}
+    {renderGroup("Brand", "brand", brandOptions, renderCheckboxOptions("brand", brandOptions, selectedBrands, setSelectedBrands))}
+    {priceProducts.length > 0 && <details className="filter-group" key="price" open={openGroups.price ?? true} onToggle={(event) => {
+      const isOpen = event.currentTarget.open;
+      setOpenGroups((current) => ({ ...current, price: isOpen }));
+    }}>
+      <summary>Price<ChevronDown size={15} /></summary>
+      <div className="filter-options price-filter">
+        <div className="price-histogram" aria-label={`Product price histogram from ${formatPrice(minBound)} to ${formatPrice(maxBound)}`}>
+          {priceBuckets.map((bucket, index) => <span key={index} className={`price-histogram-bar${bucket.selected ? " selected" : " outside"}`} title={`${formatPrice(bucket.low)}–${formatPrice(bucket.high)}: ${bucket.count} products`}><i style={{ height: `${Math.max(4, bucket.count / Math.max(1, ...priceBuckets.map((item) => item.count)) * 100)}%` }} /></span>)}
+        </div>
+        <div className="price-slider" aria-label="Select price range">
+          <input aria-label="Minimum price slider" type="range" min={minBound} max={maxBound || minBound + 1} step="0.01" value={priceMin} onChange={(event) => setPriceFromSlider("min", Number(event.target.value))} />
+          <input aria-label="Maximum price slider" type="range" min={minBound} max={maxBound || minBound + 1} step="0.01" value={priceMax} onChange={(event) => setPriceFromSlider("max", Number(event.target.value))} />
+        </div>
+        <div className="price-endpoints"><span>{formatPrice(minBound)}</span><span>{formatPrice(maxBound)}</span></div>
+        <div className="price-input-row">
+          <label>Min <span className="price-range"><span>$</span><input type="number" min={minBound} max={maxBound} step="0.01" value={minimumPrice ?? ""} placeholder={minBound.toFixed(2)} onChange={(event) => updatePriceInput("min", event.target.value)} /></span></label>
+          <span aria-hidden="true">–</span>
+          <label>Max <span className="price-range"><span>$</span><input type="number" min={minBound} max={maxBound} step="0.01" value={maximumPrice ?? ""} placeholder={maxBound.toFixed(2)} onChange={(event) => updatePriceInput("max", event.target.value)} /></span></label>
+        </div>
+      </div>
+    </details>}
+    {renderGroup("Prime delivery", "prime", [{ label: "Prime eligible", value: "prime", count: candidatesFor("prime").filter((product) => product.prime).length }].filter((option) => option.count), <div className="filter-options"><label><input type="checkbox" checked={primeOnly} onChange={(event) => setPrimeOnly(event.target.checked)} /><span className="filter-option-label">Eligible for Prime delivery <span className="prime-badge"><i>prime</i></span></span><span className="filter-count">({candidatesFor("prime").filter((product) => product.prime).length})</span></label></div>)}
+    {renderGroup("Delivery day", "delivery", deliveryOptions, renderCheckboxOptions("delivery", deliveryOptions, selectedDelivery, setSelectedDelivery))}
+    {renderGroup("Material", "material", materialOptions, renderCheckboxOptions("material", materialOptions, selectedMaterials, setSelectedMaterials))}
+    {renderGroup("Color", "color", colorOptions, renderCheckboxOptions("color", colorOptions, selectedColors, setSelectedColors))}
+    {renderGroup("Size", "size", sizeOptions, renderCheckboxOptions("size", sizeOptions, selectedSizes, setSelectedSizes))}
+    {renderGroup("Condition", "condition", conditionOptions, renderCheckboxOptions("condition", conditionOptions, selectedConditions, setSelectedConditions))}
+    {renderGroup("Deals", "deal", dealOptions, renderCheckboxOptions("deal", dealOptions, selectedDeals, setSelectedDeals))}
+    {renderGroup("Availability", "availability", availabilityOptions, renderCheckboxOptions("availability", availabilityOptions, selectedAvailability, setSelectedAvailability))}
+  </div>;
+
   return (
     <div className="container page-shell">
       <div className="breadcrumb"><Link href="/">Home</Link>　›　{initialQuery ? <>Search results for “{initialQuery}”</> : "All products"}</div>
@@ -197,52 +242,19 @@ export function SearchResults({ initialQuery, initialCategory }: { initialQuery:
         {activeFilters.length > 0 && <button className="clear-filters" onClick={clearAll}>Clear all</button>}
       </div>
 
-      {filtersOpen && <div className="filters-overlay" onMouseDown={(event) => { if (event.target === event.currentTarget) setFiltersOpen(false); }}>
-        <section className="filters-panel" role="dialog" aria-modal="true" aria-label="Product filters" onMouseDown={(event) => event.stopPropagation()}>
+      <div className="results-layout">
+        <div className={`filters-overlay${filtersOpen ? " is-open" : ""}`} onMouseDown={(event) => { if (event.target === event.currentTarget) setFiltersOpen(false); }}>
+        <section className="filters-panel" role={filtersOpen ? "dialog" : undefined} aria-modal={filtersOpen ? true : undefined} aria-label="Product filters" onMouseDown={(event) => event.stopPropagation()}>
           <div className="filters-heading"><strong>Filters</strong><button className="icon-button filters-close" aria-label="Close filters" onClick={() => setFiltersOpen(false)}><X size={19} /></button></div>
-          <div className="filters-grid">
-            {renderGroup("Department / category", "category", departmentOptions, <div className="filter-options">
-              <label><input type="radio" name="category" checked={!category} onChange={() => setCategory("")} /><span className="filter-option-label">All departments</span><span className="filter-count">({candidatesFor("category").length})</span></label>
-              {departmentOptions.map((option) => <label key={option.value}><input type="radio" name="category" checked={category === option.value} onChange={() => setCategory(option.value)} /><span className="filter-option-label">{option.label}</span><span className="filter-count">({option.count})</span></label>)}
-            </div>)}
-            {renderGroup("Customer reviews", "rating", ratingOptions, <div className="filter-options">
-              {ratingOptions.map((option) => <label key={option.value}><input type="radio" name="rating" checked={minimumRating === Number(option.value)} onChange={() => setMinimumRating(Number(option.value))} /><span className="rating-stars">{"★".repeat(Number(option.value))}{"☆".repeat(5 - Number(option.value))}</span><span className="filter-option-label">{option.label}</span><span className="filter-count">({option.count})</span></label>)}
-              <label><input type="radio" name="rating" checked={minimumRating === 0} onChange={() => setMinimumRating(0)} /><span className="filter-option-label">Any rating</span><span className="filter-count">({candidatesFor("rating").length})</span></label>
-            </div>)}
-            {renderGroup("Brand", "brand", brandOptions, renderCheckboxOptions("brand", brandOptions, selectedBrands, setSelectedBrands))}
-            {priceProducts.length > 0 && <details className="filter-group" key="price">
-              <summary>Price<ChevronDown size={15} /></summary>
-              <div className="filter-options price-filter">
-                <div className="price-histogram" aria-label={`Product price histogram from ${formatPrice(minBound)} to ${formatPrice(maxBound)}`}>
-                  {priceBuckets.map((bucket, index) => <span key={index} className={`price-histogram-bar${bucket.outside ? " outside" : ""}`} title={`${formatPrice(bucket.low)}–${formatPrice(bucket.high)}: ${bucket.count} products`}><i style={{ height: `${Math.max(4, bucket.count / Math.max(1, ...priceBuckets.map((item) => item.count)) * 100)}%` }} /></span>)}
-                </div>
-                <div className="price-slider" aria-label="Select price range">
-                  <input aria-label="Minimum price slider" type="range" min={minBound} max={maxBound || minBound + 1} step="0.01" value={priceMin} onChange={(event) => setPriceFromSlider("min", Number(event.target.value))} />
-                  <input aria-label="Maximum price slider" type="range" min={minBound} max={maxBound || minBound + 1} step="0.01" value={priceMax} onChange={(event) => setPriceFromSlider("max", Number(event.target.value))} />
-                </div>
-                <div className="price-input-row">
-                  <label>Min <span className="price-range"><span>$</span><input type="number" min={minBound} max={maxBound} step="0.01" value={minimumPrice ?? ""} placeholder={minBound.toFixed(2)} onChange={(event) => updatePriceInput("min", event.target.value)} /></span></label>
-                  <span aria-hidden="true">–</span>
-                  <label>Max <span className="price-range"><span>$</span><input type="number" min={minBound} max={maxBound} step="0.01" value={maximumPrice ?? ""} placeholder={maxBound.toFixed(2)} onChange={(event) => updatePriceInput("max", event.target.value)} /></span></label>
-                </div>
-              </div>
-            </details>}
-            {renderGroup("Prime delivery", "prime", [{ label: "Prime eligible", value: "prime", count: candidatesFor("prime").filter((product) => product.prime).length }].filter((option) => option.count), <div className="filter-options"><label><input type="checkbox" checked={primeOnly} onChange={(event) => setPrimeOnly(event.target.checked)} /><span className="filter-option-label">Eligible for Prime delivery <span className="prime-badge"><i>prime</i></span></span><span className="filter-count">({candidatesFor("prime").filter((product) => product.prime).length})</span></label></div>)}
-            {renderGroup("Delivery day", "delivery", deliveryOptions, renderCheckboxOptions("delivery", deliveryOptions, selectedDelivery, setSelectedDelivery))}
-            {renderGroup("Material", "material", materialOptions, renderCheckboxOptions("material", materialOptions, selectedMaterials, setSelectedMaterials))}
-            {renderGroup("Color", "color", colorOptions, renderCheckboxOptions("color", colorOptions, selectedColors, setSelectedColors))}
-            {renderGroup("Size", "size", sizeOptions, renderCheckboxOptions("size", sizeOptions, selectedSizes, setSelectedSizes))}
-            {renderGroup("Condition", "condition", conditionOptions, renderCheckboxOptions("condition", conditionOptions, selectedConditions, setSelectedConditions))}
-            {renderGroup("Deals & discounts", "deal", dealOptions, renderCheckboxOptions("deal", dealOptions, selectedDeals, setSelectedDeals))}
-            {renderGroup("Availability", "availability", availabilityOptions, renderCheckboxOptions("availability", availabilityOptions, selectedAvailability, setSelectedAvailability))}
-          </div>
+          {filterGroups}
           <div className="filters-footer"><button className="clear-filters" onClick={clearAll}>Clear all</button><button className="button button-primary filters-apply" onClick={() => setFiltersOpen(false)}><Check size={15} /> Apply ({filtered.length} results)</button></div>
         </section>
-      </div>}
+        </div>
 
-      {filtered.length ? <div className="results-grid">{filtered.map((product) => <ProductCard key={product.id} product={product} />)}</div> : (
-        <div className="empty-state"><h2>No matches this time</h2><p>Try a different search or clear a filter to see more.</p><button className="button button-secondary" onClick={clearAll}>Clear filters</button></div>
-      )}
+        <div className="results-main">{filtered.length ? <div className="results-grid">{filtered.map((product) => <ProductCard key={product.id} product={product} />)}</div> : (
+          <div className="empty-state"><h2>No matches this time</h2><p>Try a different search or clear a filter to see more.</p><button className="button button-secondary" onClick={clearAll}>Clear filters</button></div>
+        )}</div>
+      </div>
     </div>
   );
 }

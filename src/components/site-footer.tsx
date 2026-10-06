@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AmazonLogo } from "@/components/amazon-logo";
 
 export function SiteFooter() {
   return (
@@ -17,7 +18,7 @@ export function SiteFooter() {
           <Link href="/search">Explore the shop</Link>
           <Link href="/">Help center</Link>
         </div>
-        <div className="footer-note"><span className="footer-logo">amazon<i /></span><p>Good finds for the everyday.</p></div>
+        <div className="footer-note"><AmazonLogo className="footer-logo" /><p>Good finds for the everyday.</p></div>
       </div>
       <div className="footer-bottom">© 2026 Everyday Market · A thoughtful shopping demo</div>
     </footer>

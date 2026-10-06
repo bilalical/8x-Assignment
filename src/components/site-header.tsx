@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronDown, CircleUserRound, MapPin, Menu, Search, ShoppingCart, X } from "lucide-react";
 import { categories, products } from "@/lib/catalog";
 import { useStore } from "@/lib/store";
+import { AmazonLogo } from "@/components/amazon-logo";
+import { AllMenuDrawer } from "@/components/all-menu-drawer";
 
 const quickSearches = ["wireless headphones", "coffee maker", "desk lamp", "water bottle"];
 
@@ -20,6 +22,8 @@ export function SiteHeader() {
   const [listsOpen, setListsOpen] = useState(false);
   const [accountMessage, setAccountMessage] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [allMenuOpen, setAllMenuOpen] = useState(false);
+  const closeAllMenu = useCallback(() => setAllMenuOpen(false), []);
   const accountRef = useRef<HTMLDivElement>(null);
   const suggestions = query.trim()
     ? products.filter((product) =>
@@ -56,7 +60,7 @@ export function SiteHeader() {
     <header className="site-header">
       <div className="header-main">
         <Link aria-label="Everyday Market home" href="/" className="brand-mark">
-          <span>amazon</span><i />
+          <AmazonLogo />
         </Link>
         <button className="delivery-location" aria-label="Delivery location">
           <MapPin size={18} />
@@ -146,7 +150,7 @@ export function SiteHeader() {
           {mobileMenuOpen ? <X size={17} /> : <Menu size={17} />} {mobileMenuOpen ? "Close menu" : "Menu"}
         </button>
         <div className="header-nav-links" onClick={() => setMobileMenuOpen(false)}>
-          <Link href="/search?q=All">☰ <span>All</span></Link>
+          <button className="all-menu-trigger" onClick={() => { setAllMenuOpen(true); setMobileMenuOpen(false); }}><Menu size={15} /> <span>All</span></button>
           <Link href="/search?q=Deals">Today’s deals</Link>
           <Link href="/search?q=Home">Home</Link>
           <Link href="/search?q=Kitchen">Kitchen</Link>
@@ -158,6 +162,7 @@ export function SiteHeader() {
           <Link className="mobile-orders-link" href="/order-confirmation">Returns &amp; Orders</Link>
         </div>
       </nav>
+      {allMenuOpen && <AllMenuDrawer onClose={closeAllMenu} />}
     </header>
   );
 }
