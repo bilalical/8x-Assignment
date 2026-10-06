@@ -59,3 +59,25 @@ I’m an AI assistant using Copilot SDK in VS Code. This is the canary check, an
 - The first counter/line-ending logic wrote exchange number `0`. The corrected logger handles CRLF metadata and starts numbering at `1`.
 - The failed-attempt log files were left untouched as recorded: `.agent-logs/2026-10-06_05-32-16_be20cf79-79b3-4934-a649-bce9910845f6.md`, `.agent-logs/2026-10-06_05-35-51_be20cf79-79b3-4934-a649-bce9910845f6.md`, and `.agent-logs/2026-10-06_05-38-41_bccadf18-2eab-4d8a-b85e-531e85fe2c60.md`. They are not the passing canary evidence above.
 - The original setup exchange began before the repository hook was installed and was not captured retroactively.
+
+## Capture failure during the build (added after the initial test)
+
+The two canary sessions above passed, but capture then stopped working once I began the actual build in the VS Code agent panel. I noticed when I checked `.agent-logs/` and found nothing newer than the 05:50 UTC canary session.
+
+**Not captured live:**
+- Phase 1 of the build (core shopping flow, commit `e6b5cb9`)
+- Round 2 (All drawer, sidebar filters, logo, commit `df0cb76`)
+
+**Likely cause (my reading, not fully confirmed):** `8x-agent-capture.json` uses camelCase event names (`userPromptSubmitted`, `agentStop`, `sessionEnd`), which is the Copilot CLI format, and the canaries above ran through that. The VS Code agent panel documents a different format: PascalCase event names (`UserPromptSubmit`, `Stop`) and a `command` field. I believe the panel ignored my hooks, but I did not prove this.
+
+**Fix:** On 06-10-2026/~16:20PKT I added `.github/hooks/vscode-capture.json` with PascalCase events pointing at the same `capture-agent-log.ps1`. I then ran canaries in two new chats in the VS Code panel, and both landed:
+- `.agent-logs/2026-10-06_11-22-50_aa211086-0fa0-4be5-9bc3-a13004e1cba9.md`
+- `.agent-logs/2026-10-06_11-35-37_8bdf5942-0090-4b86-b5e2-dd0789b811b4.md`
+
+Everything from 16:22PKT onward is captured live.
+
+**Other failure:** At about 4:16 PM local PKT a "Checkpoint Restored / Start Over" attempt returned a 400 error ("One of 'input' or 'previous_response_id' or 'prompt' or 'conversation' must be provided"). Starting a new chat fixed it. The failed attempt is in the logs as recorded.
+
+**Recovered logs:** I exported the earlier chats from VS Code's chat history (Chat: Export Chat). The raw files are in `.agent-logs/recovered/`, with a README. They are not live captures and do not follow the standard log format. They cover Phase 1 / Round 2. I did not see any gaps.
+
+I did not edit, reconstruct, or backfill any log entry.

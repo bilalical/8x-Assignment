@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "type": "command",
+        "command": "powershell -NoProfile -ExecutionPolicy Bypass -File .github/hooks/capture-agent-log.ps1 -Event UserPromptSubmit"
+      }
+    ],
+    "Stop": [
+      {
+        "type": "command",
+        "command": "powershell -NoProfile -ExecutionPolicy Bypass -File .github/hooks/capture-agent-log.ps1 -Event Stop"
+      }
+    ]
+  }
+}
