@@ -59,7 +59,7 @@ export function SiteHeader() {
   return (
     <header className="site-header">
       <div className="header-main">
-        <Link aria-label="Everyday Market home" href="/" className="brand-mark">
+        <Link aria-label="Amazon home" href="/" className="brand-mark">
           <AmazonLogo />
         </Link>
         <button className="delivery-location" aria-label="Delivery location">
@@ -91,8 +91,8 @@ export function SiteHeader() {
               onSubmit={(event) => { event.preventDefault(); submit(); }}
             >
               <input
-                aria-label="Search Everyday Market"
-                placeholder="Search Everyday Market"
+                aria-label="Search Amazon"
+                placeholder="Search Amazon"
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 onFocus={() => setFocused(true)}

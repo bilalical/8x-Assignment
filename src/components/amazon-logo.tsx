@@ -4,7 +4,7 @@ export function AmazonLogo({ className = "" }: { className?: string }) {
       className={className}
       viewBox="0 0 116 46"
       role="img"
-      aria-label="amazon"
+      aria-label="Amazon"
       xmlns="http://www.w3.org/2000/svg"
     >
       <text x="1" y="30" fill="currentColor" fontFamily="Arial, Helvetica, sans-serif" fontSize="30" fontWeight="700" letterSpacing="-2">amazon</text>

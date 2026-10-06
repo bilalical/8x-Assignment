@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { formatPrice, imageUrl, products } from "@/lib/catalog";
 import { useStore } from "@/lib/store";
-import type { CartLine } from "@/lib/types";
+import { isGiftCardLine } from "@/lib/types";
+import type { ProductCartLine } from "@/lib/types";
 
 const reasons = [
   "No longer needed",
@@ -22,7 +23,7 @@ export default function ReturnRequestPage() {
   const router = useRouter();
   const { ready, signedIn, currentTime, orders, requestReturn } = useStore();
   const order = orders.find((item) => item.id === orderId);
-  const [selected, setSelected] = useState<CartLine[]>([]);
+  const [selected, setSelected] = useState<ProductCartLine[]>([]);
   const [reason, setReason] = useState("");
   const [resolution, setResolution] = useState<"refund" | "replacement">("refund");
   const [error, setError] = useState("");
@@ -42,7 +43,7 @@ export default function ReturnRequestPage() {
       <Link className="button button-secondary" href={`/orders/${encodeURIComponent(order.id)}`}>Back to order</Link></div>;
   }
 
-  const toggleItem = (line: CartLine, checked: boolean) => {
+  const toggleItem = (line: ProductCartLine, checked: boolean) => {
     setSelected((previous) => checked
       ? [...previous.filter((item) => item.productId !== line.productId), line]
       : previous.filter((item) => item.productId !== line.productId));
@@ -72,6 +73,7 @@ export default function ReturnRequestPage() {
     <form className="return-form account-content-card" onSubmit={submit}>
       <fieldset className="return-item-list"><legend>Choose items</legend>
         {order.items.map((line) => {
+          if (isGiftCardLine(line)) return null;
           const product = products.find((item) => item.id === line.productId);
           if (!product) return null;
           return <label className="return-item" key={line.productId}>

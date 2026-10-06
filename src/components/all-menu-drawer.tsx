@@ -119,7 +119,7 @@ export function AllMenuDrawer({ onClose }: { onClose: () => void }) {
             </section>
             <section className="all-menu-section">
               <h2>Programs &amp; Features</h2>
-              <div className="all-menu-section-list"><button onClick={() => searchFor("gift cards")}>Gift Cards<ChevronRight size={18} /></button></div>
+              <div className="all-menu-section-list"><Link href="/gift-cards" onClick={closeAfterNavigation}>Gift Cards<ChevronRight size={18} /></Link></div>
             </section>
             <section className="all-menu-section">
               <h2>Help &amp; Settings</h2>

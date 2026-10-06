@@ -16,7 +16,21 @@ export interface Product {
   description: string;
 }
 
-export type CartLine = { productId: string; quantity: number };
+export type ProductCartLine = { productId: string; quantity: number };
+export type GiftCardCartLine = {
+  giftCardId: string;
+  lineId: string;
+  quantity: number;
+  amount: number;
+  recipientName?: string;
+  recipientEmail?: string;
+  message?: string;
+};
+export type CartLine = ProductCartLine | GiftCardCartLine;
+
+export function isGiftCardLine(line: CartLine): line is GiftCardCartLine {
+  return "giftCardId" in line;
+}
 
 export type ShippingAddress = {
   fullName: string;
@@ -30,6 +44,7 @@ export type ShippingAddress = {
 
 export type Order = {
   id: string;
+  userId: string;
   placedAt: string;
   items: CartLine[];
   address: ShippingAddress;
@@ -45,7 +60,7 @@ export type Order = {
 
 export type ReturnRequest = {
   id: string;
-  items: CartLine[];
+  items: ProductCartLine[];
   reason: string;
   resolution: "refund" | "replacement";
   requestedAt: string;

@@ -33,7 +33,7 @@ export default function SignInPage() {
   };
 
   return <div className="container page-shell account-sign-in">
-    <Link href="/" className="brand-mark account-sign-in-logo" aria-label="Everyday Market home"><AmazonLogo /></Link>
+    <Link href="/" className="brand-mark account-sign-in-logo" aria-label="Amazon home"><AmazonLogo /></Link>
     <form className="account-card sign-in-card" onSubmit={submit}>
       <h1>Sign in</h1>
       <p className="checkout-hint">This shopping demo keeps account details on this device.</p>

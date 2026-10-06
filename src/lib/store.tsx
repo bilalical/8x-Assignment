@@ -2,7 +2,9 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { products } from "./catalog";
-import type { CartLine, Order, Product, ReturnRequest, ShippingAddress } from "./types";
+import { isGiftCardLine } from "./types";
+import type { CartLine, GiftCardCartLine, Order, Product, ProductCartLine, ReturnRequest, ShippingAddress } from "./types";
+import { giftCards } from "./gift-cards";
 import { getPromoDiscount, type PromoResult } from "./promotions";
 
 type StoreData = {
@@ -15,7 +17,7 @@ type StoreData = {
   promoCode: string;
 };
 
-type CartToast = { id: number; product: Product; quantity: number };
+type CartToast = { id: number; product: Product; quantity: number; giftCard?: (typeof giftCards)[number] };
 
 type StoreContextType = StoreData & {
   ready: boolean;
@@ -29,6 +31,7 @@ type StoreContextType = StoreData & {
   cancelOrder: (orderId: string) => boolean;
   cartToast: CartToast | null;
   addToCart: (product: Product, quantity?: number) => void;
+  addGiftCardToCart: (line: Omit<GiftCardCartLine, "lineId" | "quantity">) => void;
   dismissCartToast: () => void;
   setQuantity: (productId: string, quantity: number) => void;
   removeFromCart: (productId: string) => void;
@@ -37,60 +40,49 @@ type StoreContextType = StoreData & {
 };
 
 const STORAGE_KEY = "everyday-market-store-v1";
-const seedAddress: ShippingAddress = {
-  fullName: "Casey Morgan",
-  street: "72 Oak Lane",
-  apartment: "",
-  city: "Burlington",
-  state: "VT",
-  zip: "05401",
-  phone: "802-555-0100",
-};
-const orderDate = (daysAgo: number) => {
-  const date = new Date();
-  date.setDate(date.getDate() - daysAgo);
-  return date.toISOString();
-};
+const ordersStorageKey = (userId: string) => `${STORAGE_KEY}:orders:${encodeURIComponent(userId)}`;
+const demoUserId = (name: string) => `demo:${name.trim().toLocaleLowerCase("en-US")}`;
 const normalizeOrderStatus = (status: unknown): Order["status"] =>
   status === "shipped" || status === "delivered" || status === "cancelled" ? status : "processing";
-const seededOrders: Order[] = [
-  {
-    id: "ORD-PAST-DELIVERED",
-    placedAt: orderDate(8),
-    items: [{ productId: "linen-throw", quantity: 1 }, { productId: "ceramic-mug", quantity: 2 }],
-    address: seedAddress,
-    lastFour: "4242",
-    subtotal: 110.99,
-    tax: 9.43,
-    total: 120.42,
-    status: "delivered",
-  },
-  {
-    id: "ORD-PAST-SHIPPED",
-    placedAt: orderDate(12),
-    items: [{ productId: "trail-bottle", quantity: 1 }],
-    address: seedAddress,
-    lastFour: "4242",
-    subtotal: 31.95,
-    tax: 2.72,
-    total: 34.67,
-    status: "shipped",
-  },
-  {
-    id: "ORD-PAST-OLDER",
-    placedAt: orderDate(48),
-    items: [{ productId: "desk-lamp", quantity: 1 }],
-    address: seedAddress,
-    lastFour: "4242",
-    subtotal: 42.5,
-    tax: 3.61,
-    total: 46.11,
-    status: "delivered",
-  },
-];
-const initialData: StoreData = { cart: [], lists: { "Shopping List": [] }, orders: seededOrders, address: null, signedIn: false, accountName: "", promoCode: "" };
+const initialData: StoreData = { cart: [], lists: { "Shopping List": [] }, orders: [], address: null, signedIn: false, accountName: "", promoCode: "" };
 const StoreContext = createContext<StoreContextType | null>(null);
 const priceById = Object.fromEntries(products.map((product) => [product.id, product.price]));
+
+function isOrderForUser(value: unknown, userId: string): value is Order {
+  if (!value || typeof value !== "object") return false;
+  const order = value as Partial<Order>;
+  return order.userId === userId &&
+    typeof order.id === "string" &&
+    typeof order.placedAt === "string" &&
+    Array.isArray(order.items) &&
+    typeof order.address === "object" &&
+    order.address !== null &&
+    typeof order.lastFour === "string" &&
+    typeof order.subtotal === "number" &&
+    typeof order.tax === "number" &&
+    typeof order.total === "number";
+}
+
+function loadUserOrders(userId: string): Order[] {
+  const key = ordersStorageKey(userId);
+  try {
+    const saved = window.localStorage.getItem(key);
+    if (!saved) return [];
+    const parsed: unknown = JSON.parse(saved);
+    if (!Array.isArray(parsed)) throw new Error("Saved order history must be an array.");
+    return parsed
+      .filter((order): order is Order => isOrderForUser(order, userId))
+      .map((order) => ({ ...order, status: normalizeOrderStatus(order.status) }));
+  } catch (error) {
+    console.error("Could not load saved order history.", error);
+    try {
+      window.localStorage.removeItem(key);
+    } catch (removeError) {
+      console.error("Could not clear invalid saved order history.", removeError);
+    }
+    return [];
+  }
+}
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [data, setData] = useState<StoreData>(initialData);
@@ -105,11 +97,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         const saved = window.localStorage.getItem(STORAGE_KEY);
         if (saved) {
           const savedData = JSON.parse(saved) as Partial<StoreData>;
-          const savedOrders = Array.isArray(savedData.orders)
-            ? savedData.orders.map((order) => ({ ...order, status: normalizeOrderStatus(order.status) }))
-            : [];
-          const ordersById = new Map([...seededOrders, ...savedOrders].map((order) => [order.id, order]));
-          setData({ ...initialData, ...savedData, orders: [...ordersById.values()] });
+          const accountName = typeof savedData.accountName === "string" ? savedData.accountName.trim() : "";
+          const signedIn = savedData.signedIn === true && accountName.length > 0;
+          setData({
+            ...initialData,
+            ...savedData,
+            signedIn,
+            accountName: signedIn ? accountName : "",
+            orders: signedIn ? loadUserOrders(demoUserId(accountName)) : [],
+          });
         }
       } catch {
         window.localStorage.removeItem(STORAGE_KEY);
@@ -121,37 +117,64 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (ready) window.localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    if (!ready) return;
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...data, orders: [] }));
+    if (data.signedIn && data.accountName) {
+      const userId = demoUserId(data.accountName);
+      const userOrders = data.orders.filter((order) => order.userId === userId);
+      window.localStorage.setItem(ordersStorageKey(userId), JSON.stringify(userOrders));
+    }
   }, [data, ready]);
 
   const addToCart = useCallback((product: Product, quantity = 1) => {
     setData((previous) => {
-      const existing = previous.cart.find((line) => line.productId === product.id);
+      const existing = previous.cart.find((line): line is ProductCartLine => !isGiftCardLine(line) && line.productId === product.id);
       return {
         ...previous,
         cart: existing
           ? previous.cart.map((line) =>
-              line.productId === product.id ? { ...line, quantity: line.quantity + quantity } : line,
+              !isGiftCardLine(line) && line.productId === product.id ? { ...line, quantity: line.quantity + quantity } : line,
             )
           : [...previous.cart, { productId: product.id, quantity }],
       };
     });
     setCartToast({ id: ++noticeId.current, product, quantity });
   }, []);
+  const addGiftCardToCart = useCallback((line: Omit<GiftCardCartLine, "lineId" | "quantity">) => {
+    const card = giftCards.find((item) => item.id === line.giftCardId);
+    if (!card) return;
+    const giftLine: GiftCardCartLine = { ...line, lineId: crypto.randomUUID(), quantity: 1 };
+    setData((previous) => ({ ...previous, cart: [...previous.cart, giftLine] }));
+    setCartToast({ id: ++noticeId.current, giftCard: card, product: {
+      id: card.id,
+      title: card.name,
+      category: "Gift Cards",
+      price: line.amount,
+      rating: 5,
+      reviews: 0,
+      brand: card.brand,
+      material: "",
+      prime: false,
+      image: "",
+      description: "",
+    }, quantity: 1 });
+  }, []);
   const dismissCartToast = useCallback(() => setCartToast(null), []);
   const signIn = useCallback((name: string) => {
     const normalizedName = name.trim();
     if (!normalizedName) return;
-    setData((previous) => ({ ...previous, signedIn: true, accountName: normalizedName }));
+    const userId = demoUserId(normalizedName);
+    const orders = loadUserOrders(userId);
+    setData((previous) => ({ ...previous, signedIn: true, accountName: normalizedName, orders }));
   }, []);
   const signOut = useCallback(() => {
-    setData((previous) => ({ ...previous, signedIn: false, accountName: "" }));
+    setData((previous) => ({ ...previous, signedIn: false, accountName: "", orders: [] }));
   }, []);
   const saveAddress = useCallback((address: ShippingAddress) => {
     setData((previous) => ({ ...previous, address }));
   }, []);
   const applyPromoCode = useCallback((code: string) => {
-    const subtotal = data.cart.reduce((sum, line) => sum + line.quantity * (priceById[line.productId] ?? 0), 0);
+    const subtotal = data.cart.reduce((sum, line) => sum + line.quantity * (isGiftCardLine(line) ? line.amount : priceById[line.productId] ?? 0), 0);
     const result = getPromoDiscount(code, subtotal, Date.now());
     if (result.ok) setData((previous) => ({ ...previous, promoCode: result.code }));
     return result;
@@ -160,7 +183,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setData((previous) => ({ ...previous, promoCode: "" }));
   }, []);
   const requestReturn = useCallback((orderId: string, request: Omit<ReturnRequest, "id" | "requestedAt">) => {
-    const order = data.orders.find((item) => item.id === orderId);
+    const userId = data.signedIn ? demoUserId(data.accountName) : "";
+    const order = data.orders.find((item) => item.id === orderId && item.userId === userId);
     const age = order ? Date.now() - new Date(order.placedAt).getTime() : -1;
     const withinReturnWindow = age >= 0 && age <= 30 * 24 * 60 * 60 * 1000;
     if (!order || order.status !== "delivered" || !withinReturnWindow || order.returnRequest || !request.items.length ||
@@ -170,7 +194,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       selectedCounts.set(selected.productId, (selectedCounts.get(selected.productId) ?? 0) + selected.quantity);
     }
     const validItems = [...selectedCounts].every(([productId, quantity]) => {
-      const purchased = order.items.find((line) => line.productId === productId);
+      const purchased = order.items.find((line) => !isGiftCardLine(line) && line.productId === productId);
       return purchased && quantity > 0 && quantity <= purchased.quantity;
     });
     if (!validItems) return false;
@@ -181,31 +205,35 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     };
     setData((previous) => ({
       ...previous,
-      orders: previous.orders.map((item) => item.id === orderId ? { ...item, returnRequest } : item),
+      orders: previous.orders.map((item) => item.id === orderId && item.userId === userId ? { ...item, returnRequest } : item),
     }));
     return true;
-  }, [data.orders]);
+  }, [data.accountName, data.orders, data.signedIn]);
   const cancelOrder = useCallback((orderId: string) => {
-    const order = data.orders.find((item) => item.id === orderId);
+    const userId = data.signedIn ? demoUserId(data.accountName) : "";
+    const order = data.orders.find((item) => item.id === orderId && item.userId === userId);
     if (!order || order.status !== "processing") return false;
     setData((previous) => ({
       ...previous,
-      orders: previous.orders.map((item) => item.id === orderId ? { ...item, status: "cancelled" } : item),
+      orders: previous.orders.map((item) => item.id === orderId && item.userId === userId ? { ...item, status: "cancelled" } : item),
     }));
     return true;
-  }, [data.orders]);
+  }, [data.accountName, data.orders, data.signedIn]);
 
   const setQuantity = useCallback((productId: string, quantity: number) => {
     setData((previous) => ({
       ...previous,
       cart: quantity < 1
-        ? previous.cart.filter((line) => line.productId !== productId)
-        : previous.cart.map((line) => line.productId === productId ? { ...line, quantity } : line),
+        ? previous.cart.filter((line) => isGiftCardLine(line) ? line.lineId !== productId : line.productId !== productId)
+        : previous.cart.map((line) => (isGiftCardLine(line) ? line.lineId === productId : line.productId === productId) ? { ...line, quantity } : line),
     }));
   }, []);
 
   const removeFromCart = useCallback((productId: string) => {
-    setData((previous) => ({ ...previous, cart: previous.cart.filter((line) => line.productId !== productId) }));
+    setData((previous) => ({
+      ...previous,
+      cart: previous.cart.filter((line) => isGiftCardLine(line) ? line.lineId !== productId : line.productId !== productId),
+    }));
   }, []);
 
   const saveToList = useCallback((listName: string, productId: string) => {
@@ -219,26 +247,27 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const createOrder = useCallback((address: ShippingAddress, card: string) => {
-    if (!data.cart.length) return null;
-    const subtotal = data.cart.reduce(
-      (sum, line) => sum + line.quantity * (priceById[line.productId] ?? 0),
-      0,
-    );
+    if (!data.cart.length || !data.signedIn || !data.accountName.trim()) return null;
+    const userId = demoUserId(data.accountName);
+    const subtotal = data.cart.reduce((sum, line) => sum + line.quantity * (isGiftCardLine(line) ? line.amount : priceById[line.productId] ?? 0), 0);
     const promo = data.promoCode ? getPromoDiscount(data.promoCode, subtotal, Date.now()) : null;
     if (promo && !promo.ok) return null;
     const discountAmount = promo?.ok ? promo.discountAmount : 0;
-    const taxableSubtotal = subtotal - discountAmount;
-    const tax = Number((taxableSubtotal * 0.085).toFixed(2));
-    const total = Number((taxableSubtotal + tax).toFixed(2));
+    const taxableSubtotal = data.cart.reduce((sum, line) =>
+      sum + (!isGiftCardLine(line) ? line.quantity * (priceById[line.productId] ?? 0) : 0), 0);
+    const taxableDiscount = subtotal > 0 ? discountAmount * (taxableSubtotal / subtotal) : 0;
+    const roundedTax = Number((Math.max(0, taxableSubtotal - taxableDiscount) * 0.085).toFixed(2));
+    const total = Number((subtotal - discountAmount + roundedTax).toFixed(2));
     if (!Number.isFinite(total) || total <= 0) return null;
     const order: Order = {
       id: `ORD-${Date.now().toString(36).toUpperCase()}`,
+      userId,
       placedAt: new Date().toISOString(),
       items: data.cart,
       address,
       lastFour: card.replace(/\D/g, "").slice(-4),
       subtotal,
-      tax,
+      tax: roundedTax,
       total,
       status: "processing",
       ...(promo?.ok ? { discountCode: promo.code, discountAmount: promo.discountAmount } : {}),
@@ -248,8 +277,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   }, [data]);
 
   const value = useMemo(
-    () => ({ ...data, ready, currentTime, cartToast, addToCart, dismissCartToast, signIn, signOut, saveAddress, applyPromoCode, removePromoCode, requestReturn, cancelOrder, setQuantity, removeFromCart, saveToList, createOrder }),
-    [data, ready, currentTime, cartToast, addToCart, dismissCartToast, signIn, signOut, saveAddress, applyPromoCode, removePromoCode, requestReturn, cancelOrder, setQuantity, removeFromCart, saveToList, createOrder],
+    () => ({ ...data, ready, currentTime, cartToast, addToCart, addGiftCardToCart, dismissCartToast, signIn, signOut, saveAddress, applyPromoCode, removePromoCode, requestReturn, cancelOrder, setQuantity, removeFromCart, saveToList, createOrder }),
+    [data, ready, currentTime, cartToast, addToCart, addGiftCardToCart, dismissCartToast, signIn, signOut, saveAddress, applyPromoCode, removePromoCode, requestReturn, cancelOrder, setQuantity, removeFromCart, saveToList, createOrder],
   );
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }

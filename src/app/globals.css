@@ -139,6 +139,100 @@ main { min-height: 60vh; }
 .department-card:hover img { transform: scale(1.05); }
 .department-card span { z-index: 2; padding: 0 12px 12px; color: white; font-size: 15px; font-weight: 700; text-shadow: 0 1px 5px rgba(0,0,0,.3); }
 .category-note { display: inline-flex; align-items: center; gap: 8px; margin-top: 11px; color: var(--muted); font-size: 12px; }
+.gift-card-shop { max-width: 1180px; }
+.gift-card-shop-heading { margin: 0 0 28px; }
+.gift-card-shop-heading h1 { margin: 5px 0 7px; }
+.gift-card-shop-heading p { max-width: 640px; margin: 0; }
+.gift-card-section { margin: 32px 0 42px; }
+.gift-card-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 13px; }
+.gift-card-section-heading h2 { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: clamp(20px, 2.4vw, 25px); font-weight: 500; }
+.gift-card-carousel-wrap { position: relative; }
+.gift-card-carousel { display: grid; grid-auto-columns: 214px; grid-auto-flow: column; gap: 13px; overflow-x: auto; padding: 3px 2px 13px; scroll-snap-type: x mandatory; scrollbar-width: thin; }
+.gift-card-carousel:focus-visible { outline: 2px solid var(--teal-700); outline-offset: 3px; }
+.gift-card-carousel-arrow { position: absolute; top: 68px; z-index: 2; width: 38px; height: 42px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 8px; background: white; color: var(--ink); box-shadow: var(--shadow-soft); }
+.gift-card-carousel-arrow:hover { background: #f2f5f6; }
+.gift-card-carousel-prev { left: -17px; }
+.gift-card-carousel-next { right: -17px; }
+.gift-card-tile { min-width: 0; overflow: hidden; border: 1px solid var(--line); border-radius: var(--radius-md); background: white; scroll-snap-align: start; transition: box-shadow .2s ease, transform .2s ease; }
+.gift-card-tile:hover { transform: translateY(-2px); box-shadow: var(--shadow-soft); }
+.gift-card-tile-image { height: 166px; display: grid; place-items: center; overflow: hidden; padding: 13px; background: #f0f2f3; }
+.gift-card-face { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; border-radius: 11px; color: white; box-shadow: 0 8px 17px rgba(13,24,34,.19); text-align: center; }
+.gift-card-egift { width: 100%; aspect-ratio: 1.72; }
+.gift-card-physical { width: auto; height: 100%; aspect-ratio: .68; }
+.gift-card-art-brand { z-index: 1; max-width: 90%; overflow: hidden; font-size: clamp(14px, 2vw, 20px); font-weight: 750; line-height: 1.15; text-overflow: ellipsis; }
+.gift-card-physical .gift-card-art-brand { font-size: 15px; }
+.gift-card-notch { position: absolute; top: -8px; left: calc(50% - 12px); width: 24px; height: 18px; border-radius: 0 0 50% 50%; background: #f0f2f3; }
+.gift-card-design-label { z-index: 1; margin-top: 8px; padding: 3px 8px; border: 1px solid rgba(255,255,255,.58); border-radius: 999px; font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.gift-card-confetti { position: absolute; inset: 0; overflow: hidden; }
+.gift-card-confetti i { position: absolute; width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,.7); }
+.gift-card-confetti i:nth-child(1) { top: 17%; left: 16%; }
+.gift-card-confetti i:nth-child(2) { top: 24%; right: 18%; width: 5px; height: 12px; border-radius: 2px; transform: rotate(28deg); }
+.gift-card-confetti i:nth-child(3) { bottom: 18%; left: 22%; width: 6px; height: 11px; border-radius: 2px; transform: rotate(-35deg); }
+.gift-card-confetti i:nth-child(4) { right: 13%; bottom: 22%; width: 9px; height: 9px; }
+.gift-card-confetti i:nth-child(5) { top: 12%; left: 43%; width: 5px; height: 10px; border-radius: 2px; transform: rotate(52deg); }
+.gift-card-confetti i:nth-child(6) { right: 38%; bottom: 10%; width: 5px; height: 5px; }
+.gift-card-balloons { position: absolute; inset: 0; }
+.gift-card-balloons i { position: absolute; top: 12%; left: 8%; width: 19px; height: 24px; border-radius: 50% 50% 48% 48%; background: rgba(255,255,255,.35); }
+.gift-card-balloons i::after { position: absolute; top: 22px; left: 9px; width: 1px; height: 23px; background: rgba(255,255,255,.58); content: ""; }
+.gift-card-balloons i:nth-child(2) { top: auto; right: 8%; bottom: 14%; left: auto; width: 16px; height: 21px; }
+.gift-card-balloons i:nth-child(2)::after { top: 19px; left: 8px; height: 18px; }
+.gift-card-stars { position: absolute; inset: 0; }
+.gift-card-stars i { position: absolute; top: 12%; right: 38%; width: 10px; height: 10px; background: rgba(255,255,255,.78); clip-path: polygon(50% 0,62% 36%,100% 50%,62% 64%,50% 100%,38% 64%,0 50%,38% 36%); }
+.gift-card-stars i:nth-child(2) { top: auto; right: auto; bottom: 14%; left: 40%; width: 7px; height: 7px; }
+.gift-card-stars i:nth-child(3) { top: 35%; right: 10%; width: 6px; height: 6px; }
+.gift-card-design-birthday { background: #ffb2a3; color: #803453; }
+.gift-card-design-thank-you { background: #f6d365; color: #785b16; }
+.gift-card-design-holiday { background: #8ed0b1; color: #175744; }
+.gift-card-design-congratulations { background: #c6b4f4; color: #453477; }
+.gift-card-theme-starbucks { background: linear-gradient(135deg,#006241,#164c3a); }
+.gift-card-theme-apple { background: linear-gradient(135deg,#292d32,#090a0b); }
+.gift-card-theme-google-play { background: linear-gradient(135deg,#34a853,#2478d4 52%,#e94235); }
+.gift-card-theme-uber-eats { background: linear-gradient(135deg,#0d1714,#36594b); }
+.gift-card-theme-doordash { background: linear-gradient(135deg,#eb5b48,#b93028); }
+.gift-card-theme-hm { background: linear-gradient(135deg,#d32030,#991b28); }
+.gift-card-theme-netflix { background: linear-gradient(135deg,#161616,#b20710); }
+.gift-card-theme-spotify { background: linear-gradient(135deg,#1ed760,#087c40); color: #082616; }
+.gift-card-theme-steam { background: linear-gradient(135deg,#233b55,#101a28); }
+.gift-card-theme-nike { background: linear-gradient(135deg,#262626,#535353); }
+.gift-card-theme-target { background: linear-gradient(135deg,#d9282b,#a91318); }
+.gift-card-theme-walmart { background: linear-gradient(135deg,#0874bd,#064c8b); }
+.gift-card-theme-birthday { background: linear-gradient(135deg,#f6a1a7,#f8cd69); color: #743854; }
+.gift-card-theme-thank-you { background: linear-gradient(135deg,#f6d365,#fda085); color: #6f4b2d; }
+.gift-card-theme-holiday { background: linear-gradient(135deg,#2d8b65,#173c46); }
+.gift-card-theme-congratulations { background: linear-gradient(135deg,#8d78d8,#df86ad); }
+.gift-card-tile-content { display: grid; gap: 7px; padding: 11px 12px 13px; }
+.gift-card-tile-title { overflow: hidden; font-size: 13px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+.gift-card-tile-price { display: flex; align-items: baseline; gap: 8px; font-size: 14px; }
+.gift-card-tile-price del { color: var(--muted); font-size: 11px; font-weight: 400; }
+.gift-card-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(190px,1fr)); gap: 15px; }
+.gift-card-grid .gift-card-tile-image { height: 176px; }
+.gift-card-detail { display: grid; grid-template-columns: minmax(250px,.9fr) minmax(320px,1.1fr); gap: clamp(25px,5vw,64px); align-items: start; max-width: 1000px; margin: 15px auto 50px; }
+.gift-card-detail-preview { min-height: 390px; display: grid; place-items: center; padding: 32px; border: 1px solid var(--line); border-radius: var(--radius-lg); background: #f0f2f3; }
+.gift-card-detail-preview .gift-card-egift { width: 100%; }
+.gift-card-detail-preview .gift-card-physical { height: 330px; }
+.gift-card-detail-preview .gift-card-art-brand { font-size: 25px; }
+.gift-card-detail-copy h1 { margin: 0 0 9px; font-size: clamp(25px,3vw,32px); font-weight: 550; line-height: 1.25; }
+.gift-card-detail-form { display: grid; gap: 13px; margin-top: 21px; }
+.gift-card-amounts { display: flex; flex-wrap: wrap; gap: 8px; padding: 0; border: 0; }
+.gift-card-amounts legend { width: 100%; margin-bottom: 5px; font-size: 13px; font-weight: 700; }
+.gift-card-amount-option { min-height: 40px; display: inline-flex; align-items: center; gap: 6px; padding: 0 12px; border: 1px solid var(--line); border-radius: 7px; background: white; font-size: 12px; cursor: pointer; }
+.gift-card-amount-option.selected { border-color: var(--teal-700); box-shadow: 0 0 0 1px var(--teal-700); }
+.gift-card-amount-option input { accent-color: var(--teal-700); }
+.gift-card-detail-form textarea { width: 100%; padding: 9px 10px; border: 1px solid #cbd5d9; border-radius: 7px; background: white; font: inherit; font-size: 12px; resize: vertical; }
+.gift-card-detail-form textarea:focus { border-color: var(--teal-700); outline: 2px solid rgba(23,107,103,.13); }
+.gift-card-message-count { justify-self: end; color: var(--muted); font-size: 10px; font-weight: 400; }
+.gift-card-detail-form .button { justify-self: start; min-width: 190px; }
+.gift-cart-image { display: grid; place-items: center; padding: 10px; }
+.gift-cart-image .gift-card-physical { height: 126px; }
+.gift-cart-message { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gift-checkout-item .gift-card-face { width: 48px; height: auto; }
+.gift-checkout-item .gift-card-physical { height: 48px; }
+.gift-order-item-thumb .gift-card-face { width: 100%; height: 100%; border-radius: 0; box-shadow: none; }
+.gift-order-item-thumb .gift-card-physical { width: auto; height: 100%; }
+.gift-order-detail-item .gift-card-face { width: 90px; height: auto; aspect-ratio: 1.72; }
+.gift-order-detail-item .gift-card-physical { width: auto; height: 90px; aspect-ratio: .68; }
+.cart-toast-product .gift-card-face { width: 64px; height: 64px; border-radius: 8px; }
+.cart-toast-product .gift-card-physical { width: auto; height: 64px; }
 .product-rail-section { margin: 37px 0; }
 .rail-controls { display: flex; gap: 6px; }
 .icon-button { width: 36px; height: 36px; display: inline-grid; flex: 0 0 auto; place-items: center; border: 1px solid var(--line); border-radius: 50%; background: white; color: var(--navy-900); }
@@ -289,6 +383,7 @@ body:has(.checkout-page) .site-footer { display: none; }
 .field { display: grid; gap: 5px; font-size: 11px; font-weight: 650; }
 .field-full { grid-column: 1 / -1; }
 .field input, .field select { width: 100%; min-height: 38px; padding: 8px 10px; border: 1px solid #cbd5d9; border-radius: 7px; background: white; font-size: 12px; }
+.gift-card-detail-form .field textarea { min-height: 92px; }
 .field input:focus, .field select:focus { border-color: var(--teal-700); outline: 2px solid rgba(23,107,103,.13); }
 .checkout-hint { margin: 0 0 14px; color: var(--muted); font-size: 11px; }
 .checkout-summary { position: sticky; top: 18px; }
@@ -523,6 +618,19 @@ body:has(.checkout-page) .site-footer { display: none; }
   .department-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
   .department-card { min-height: 137px; }
   .department-card:last-child { grid-column: span 2; min-height: 123px; }
+  .gift-card-shop-heading { margin-bottom: 22px; }
+  .gift-card-section { margin: 25px 0 32px; }
+  .gift-card-carousel { grid-auto-columns: minmax(180px, 60vw); gap: 10px; }
+  .gift-card-carousel-arrow { width: 33px; height: 38px; }
+  .gift-card-carousel-prev { left: -9px; }
+  .gift-card-carousel-next { right: -9px; }
+  .gift-card-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+  .gift-card-grid .gift-card-tile-image { height: 145px; }
+  .gift-card-tile-image { height: 150px; }
+  .gift-card-detail { grid-template-columns: 1fr; gap: 20px; margin-top: 10px; }
+  .gift-card-detail-preview { min-height: 270px; padding: 24px; }
+  .gift-card-detail-preview .gift-card-physical { height: 225px; }
+  .gift-card-detail-copy h1 { font-size: 26px; }
   .product-rail { grid-auto-columns: minmax(174px, 46vw); gap: 10px; }
   .product-card-image { height: 164px; }
   .product-card-content { padding: 10px; }
@@ -585,6 +693,8 @@ body:has(.checkout-page) .site-footer { display: none; }
   .order-timeline-step > strong { max-width: 75px; }
   .order-detail-item { grid-template-columns: 72px minmax(0,1fr); gap: 10px; }
   .order-detail-item img { width: 72px; height: 72px; }
+  .gift-order-detail-item .gift-card-face { width: 72px; }
+  .gift-order-detail-item .gift-card-physical { height: 72px; }
   .return-item { grid-template-columns: 20px 56px minmax(0,1fr); gap: 9px; }
   .return-item img { width: 56px; height: 56px; }
   .return-status-note > a { margin-left: 0; }
@@ -601,6 +711,8 @@ body:has(.checkout-page) .site-footer { display: none; }
   .cart-icon svg { width: 28px; }
   .product-card-image { height: 145px; }
   .product-card-title { font-size: 12px; }
+  .gift-card-grid .gift-card-tile-image { height: 125px; padding: 9px; }
+  .gift-card-grid .gift-card-tile-content { padding: 9px; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }

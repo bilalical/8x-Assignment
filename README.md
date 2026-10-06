@@ -1,6 +1,8 @@
-# Everyday Market
+# Amazon
 
 A small, responsive Amazon-inspired storefront built with Next.js App Router, TypeScript, and Tailwind CSS 4. Product data lives in `src/lib/products.json`; cart, saved lists, addresses, mock orders, and demo checkout state live in browser `localStorage`. There is no backend or required environment configuration.
+
+Order history in this demo is partitioned by the entered account name in browser storage. This is not authentication or secure access control; do not use it for real or sensitive orders.
 
 ## Run locally
 
@@ -18,6 +20,7 @@ Open [http://localhost:3000](http://localhost:3000).
 - `/product/desk-lamp` — product details, pointer/tap image zoom, add to cart, and save-to-list modal.
 - `/cart` — quantity management, remove/save actions, recommendations, and subtotal.
 - `/checkout` — delivery details and a local-only mock card payment form.
+- `/gift-cards` — browse brand and celebration eGift and physical cards.
 - `/order-confirmation` — details of the most recently placed local demo order.
 
 All catalog product IDs are also available as static product routes. Images use Unsplash's public image CDN and require an internet connection in the browser.

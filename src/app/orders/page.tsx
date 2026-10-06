@@ -4,6 +4,9 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { ChevronRight, Package } from "lucide-react";
 import { formatPrice, imageUrl, products } from "@/lib/catalog";
+import { GiftCardFace } from "@/components/gift-card-face";
+import { giftCards } from "@/lib/gift-cards";
+import { isGiftCardLine } from "@/lib/types";
 import { useStore } from "@/lib/store";
 import type { Order } from "@/lib/types";
 
@@ -20,7 +23,7 @@ function statusLabel(status: Order["status"]) {
 }
 
 export default function OrdersPage() {
-  const { ready, orders } = useStore();
+  const { ready, orders, signedIn } = useStore();
   const [range, setRange] = useState<TimeRange>("all");
   const [rangeReferenceTime, setRangeReferenceTime] = useState(0);
 
@@ -33,6 +36,11 @@ export default function OrdersPage() {
   }, [orders, range, rangeReferenceTime]);
 
   if (!ready) return <OrdersLoadingSkeleton />;
+  if (!signedIn) return <div className="container page-shell orders-page">
+    <h1 className="page-title">Your Orders</h1>
+    <p className="muted">Sign in to view your order history.</p>
+    <Link className="button button-primary" href="/sign-in?next=%2Forders">Sign in</Link>
+  </div>;
 
   return <div className="container page-shell orders-page">
     <div className="breadcrumb"><Link href="/account">Your account</Link>　›　Your Orders</div>
@@ -45,21 +53,28 @@ export default function OrdersPage() {
     </div>
     <div className="orders-list">
       {visibleOrders.map((order) => {
-        const orderProducts = order.items.map((line) => ({ line, product: products.find((product) => product.id === line.productId) }))
-          .filter((item): item is typeof item & { product: (typeof products)[number] } => Boolean(item.product));
         return <article className="order-card" key={order.id}>
           <header className="order-card-header">
             <div><small>ORDER PLACED</small><strong>{new Date(order.placedAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</strong></div>
             <div><small>TOTAL</small><strong>{formatPrice(order.total)}</strong></div>
-            <div><small>SHIP TO</small><strong>{order.address.fullName}</strong></div>
+            <div><small>{order.address.fullName ? "SHIP TO" : "DELIVERY"}</small><strong>{order.address.fullName || "Digital gift card"}</strong></div>
             <div className="order-number"><small>ORDER # {order.id}</small><Link href={`/orders/${encodeURIComponent(order.id)}`}>View order details <ChevronRight size={13} /></Link></div>
           </header>
           <div className="order-card-body">
             <div className="order-status"><Package size={17} /><strong>{order.returnRequest ? "Return requested" : statusLabel(order.status)}</strong>{order.status === "delivered" && !order.returnRequest && <span>Delivered</span>}</div>
             <div className="order-card-items">
-              {orderProducts.map(({ line, product }) => <Link className="order-item-thumb" key={line.productId} href={`/product/${product.id}`} title={`${line.quantity} × ${product.title}`}>
-                <img src={imageUrl(product.image, 180)} alt={product.title} /><span>{line.quantity} × {product.title}</span>
-              </Link>)}
+              {order.items.map((line) => {
+                if (isGiftCardLine(line)) {
+                  const giftCard = giftCards.find((card) => card.id === line.giftCardId);
+                  return giftCard ? <Link className="order-item-thumb gift-order-item-thumb" key={line.lineId} href={`/gift-cards/${giftCard.id}`} title={`${giftCard.name}, ${formatPrice(line.amount)}`}>
+                    <GiftCardFace card={giftCard} /><span>{giftCard.name} · {formatPrice(line.amount)}{line.recipientName ? ` for ${line.recipientName}` : ""}</span>
+                  </Link> : null;
+                }
+                const product = products.find((item) => item.id === line.productId);
+                return product ? <Link className="order-item-thumb" key={line.productId} href={`/product/${product.id}`} title={`${line.quantity} × ${product.title}`}>
+                  <img src={imageUrl(product.image, 180)} alt={product.title} /><span>{line.quantity} × {product.title}</span>
+                </Link> : null;
+              })}
             </div>
             <Link className="button button-secondary order-details-button" href={`/orders/${encodeURIComponent(order.id)}`}>View order</Link>
           </div>

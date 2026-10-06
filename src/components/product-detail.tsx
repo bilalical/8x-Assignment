@@ -37,7 +37,7 @@ export function ProductDetail({ product }: { product: Product }) {
           <div className="feature-list">
             <span>Made for everyday use, with thoughtful details.</span>
             <span>Easy to enjoy at home, at work, or on the go.</span>
-            <span>Selected by the Everyday Market team.</span>
+            <span>Selected by the Amazon team.</span>
           </div>
           {product.prime && <div className="detail-prime"><i className="prime-badge"><i>prime</i></i> Fast, free delivery available on this item.</div>}
           <div className="product-detail-actions">
@@ -48,7 +48,7 @@ export function ProductDetail({ product }: { product: Product }) {
           <div className="purchase-card-price">{formatPrice(product.price)}</div>
           <div className="delivery-copy"><strong>FREE delivery</strong> on your first order. Order today, enjoy it soon.</div>
           {product.prime && <div className="detail-prime"><i className="prime-badge"><i>prime</i></i> Free delivery for Prime members.</div>}
-          <div className="delivery-copy">Ships from <strong>Everyday Market</strong><br />Sold by <strong>{product.brand}</strong></div>
+          <div className="delivery-copy">Ships from <strong>Amazon</strong><br />Sold by <strong>{product.brand}</strong></div>
           <label className="muted" htmlFor="purchase-quantity">Quantity</label>
           <select id="purchase-quantity" className="purchase-quantity" value={quantity} onChange={(event) => setQuantity(Number(event.target.value))}>
             {[1,2,3,4,5,6,7,8,9,10].map((number) => <option key={number} value={number}>{number}</option>)}

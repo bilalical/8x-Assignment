@@ -30,6 +30,7 @@ export default function HomePage() {
           <p>Useful, lovely finds for the everyday. Start with a small idea and see where it takes you.</p>
           <div className="hero-actions">
             <Link href="/search" className="button button-primary">Explore the shop <ArrowRight size={15} /></Link>
+            <Link href="/gift-cards" className="text-link">Visit the Gift Card Shop</Link>
             <Link href="/search?q=Home" className="text-link">Find your next home favorite</Link>
           </div>
         </div>

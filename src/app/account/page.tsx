@@ -26,7 +26,7 @@ export default function AccountPage() {
   if (!ready || !signedIn) return <div className="container page-shell"><p>Opening your account…</p></div>;
 
   return <div className="container page-shell account-page">
-    <div className="account-page-heading"><div><p className="eyebrow">Everyday Market</p><h1 className="page-title">Your account</h1><p className="muted">Welcome, {accountName}.</p></div><button className="button button-secondary" onClick={() => { signOut(); router.replace("/"); }}>Sign out</button></div>
+    <div className="account-page-heading"><div><p className="eyebrow">Amazon</p><h1 className="page-title">Your account</h1><p className="muted">Welcome, {accountName}.</p></div><button className="button button-secondary" onClick={() => { signOut(); router.replace("/"); }}>Sign out</button></div>
     <div className="account-card-grid">{accountCards.map(({ title, description, href, icon: Icon }) => <Link className="account-card" href={href} key={href}><Icon size={25} /><span><strong>{title}</strong><small>{description}</small></span></Link>)}</div>
   </div>;
 }

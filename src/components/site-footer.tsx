@@ -17,11 +17,12 @@ export function SiteFooter() {
           <Link href="/orders">Your Orders</Link>
           <Link href="/cart">Your cart</Link>
           <Link href="/search">Explore the shop</Link>
+          <Link href="/gift-cards">Gift Cards</Link>
           <Link href="/">Help center</Link>
         </div>
-        <div className="footer-note"><AmazonLogo className="footer-logo" /><p>Good finds for the everyday.</p></div>
+        <div className="footer-note"><AmazonLogo className="footer-logo" /><p>Find what you need on Amazon.</p></div>
       </div>
-      <div className="footer-bottom">© 2026 Everyday Market · A thoughtful shopping demo</div>
+      <div className="footer-bottom">© 2026 Amazon · A thoughtful shopping demo</div>
     </footer>
   );
 }

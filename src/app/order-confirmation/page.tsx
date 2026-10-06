@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useStore } from "@/lib/store";
 import { formatPrice, products } from "@/lib/catalog";
+import { giftCards } from "@/lib/gift-cards";
+import { isGiftCardLine } from "@/lib/types";
 import { Check, PackageCheck } from "lucide-react";
 
 export default function OrderConfirmationPage() {
@@ -39,13 +41,17 @@ function OrderConfirmationContent() {
         {order.discountAmount ? <div><span>Discount{order.discountCode ? ` (${order.discountCode})` : ""}</span><strong>−{formatPrice(order.discountAmount)}</strong></div> : null}
         <div><span>Order total</span><strong>{formatPrice(order.total)}</strong></div>
         <div><span>Payment</span><strong>Card ending in {order.lastFour}</strong></div>
-        <div><span>Delivering to</span><strong>{order.address.fullName}, {order.address.city}</strong></div>
+        {order.address.fullName && <div><span>Delivering to</span><strong>{order.address.fullName}, {order.address.city}</strong></div>}
       </div>
       <p className="checkout-hint">A mock order was saved locally. No payment was collected.</p>
       <Link className="button button-primary" href="/search">Continue shopping</Link>
       <Link className="button button-secondary" href={`/orders/${encodeURIComponent(order.id)}`}>View order details</Link>
       <Link className="button button-secondary" href="/">Back to home</Link>
       <div className="order-contents">{order.items.map((line) => {
+        if (isGiftCardLine(line)) {
+          const giftCard = giftCards.find((item) => item.id === line.giftCardId);
+          return giftCard ? <p key={line.lineId}>{giftCard.name} · {formatPrice(line.amount)}{line.recipientName ? ` for ${line.recipientName} (${line.recipientEmail})` : ""}</p> : null;
+        }
         const product = products.find((item) => item.id === line.productId);
         return product ? <p key={line.productId}>{line.quantity} × {product.title}</p> : null;
       })}</div>
