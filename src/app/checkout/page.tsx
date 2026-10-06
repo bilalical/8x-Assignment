@@ -7,6 +7,8 @@ import { LockKeyhole, ShieldCheck, ShoppingCart } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { formatPrice, products } from "@/lib/catalog";
 import { useStore } from "@/lib/store";
+import { getPromoDiscount, promoErrorMessage } from "@/lib/promotions";
+import { PromoCodeField } from "@/components/promo-code-field";
 import type { ShippingAddress } from "@/lib/types";
 
 const emptyAddress: ShippingAddress = { fullName: "", street: "", apartment: "", city: "", state: "", zip: "", phone: "" };
@@ -19,7 +21,7 @@ export default function CheckoutPage() {
 
 function CheckoutForm({ initialAddress }: { initialAddress: ShippingAddress | null }) {
   const router = useRouter();
-  const { cart, createOrder } = useStore();
+  const { cart, createOrder, promoCode, currentTime } = useStore();
   const [address, setAddress] = useState<ShippingAddress>(initialAddress ?? emptyAddress);
   const [card, setCard] = useState("4242 4242 4242 4242");
   const [expiry, setExpiry] = useState("12/29");
@@ -28,8 +30,11 @@ function CheckoutForm({ initialAddress }: { initialAddress: ShippingAddress | nu
   const lines = cart.map((line) => ({ ...line, product: products.find((product) => product.id === line.productId) }))
     .filter((line): line is typeof line & { product: (typeof products)[number] } => Boolean(line.product));
   const subtotal = lines.reduce((sum, line) => sum + line.quantity * line.product.price, 0);
-  const tax = subtotal * 0.085;
-  const total = subtotal + tax;
+  const promoResult = promoCode ? getPromoDiscount(promoCode, subtotal, currentTime ?? 0) : null;
+  const discount = promoResult?.ok ? promoResult.discountAmount : 0;
+  const taxableSubtotal = subtotal - discount;
+  const tax = Number((taxableSubtotal * 0.085).toFixed(2));
+  const total = taxableSubtotal + tax;
 
   const updateAddress = (field: keyof ShippingAddress, value: string) =>
     setAddress((previous) => ({ ...previous, [field]: value }));
@@ -39,6 +44,10 @@ function CheckoutForm({ initialAddress }: { initialAddress: ShippingAddress | nu
     setError("");
     if (!lines.length) {
       setError("Your cart is empty. Add an item before checking out.");
+      return;
+    }
+    if (promoResult && !promoResult.ok) {
+      setError(promoErrorMessage[promoResult.error]);
       return;
     }
     const orderId = createOrder(address, card);
@@ -104,6 +113,8 @@ function CheckoutForm({ initialAddress }: { initialAddress: ShippingAddress | nu
             <aside className="checkout-summary">
               <h2>Order summary</h2>
               <div className="subtotal-line"><span>Items</span><strong>{formatPrice(subtotal)}</strong></div>
+              <PromoCodeField subtotal={subtotal} />
+              {discount > 0 && <div className="subtotal-line promo-discount-line"><span>Discount ({promoCode})</span><strong>−{formatPrice(discount)}</strong></div>}
               <div className="subtotal-line"><span>Shipping</span><span>FREE</span></div>
               <div className="subtotal-line"><span>Estimated tax</span><strong>{formatPrice(tax)}</strong></div>
               <div className="subtotal-line subtotal-total"><span>Order total</span><strong>{formatPrice(total)}</strong></div>

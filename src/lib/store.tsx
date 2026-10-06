@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { products } from "./catalog";
 import type { CartLine, Order, Product, ReturnRequest, ShippingAddress } from "./types";
+import { getPromoDiscount, type PromoResult } from "./promotions";
 
 type StoreData = {
   cart: CartLine[];
@@ -11,6 +12,7 @@ type StoreData = {
   address: ShippingAddress | null;
   signedIn: boolean;
   accountName: string;
+  promoCode: string;
 };
 
 type CartToast = { id: number; product: Product; quantity: number };
@@ -21,6 +23,8 @@ type StoreContextType = StoreData & {
   signIn: (name: string) => void;
   signOut: () => void;
   saveAddress: (address: ShippingAddress) => void;
+  applyPromoCode: (code: string) => PromoResult;
+  removePromoCode: () => void;
   requestReturn: (orderId: string, request: Omit<ReturnRequest, "id" | "requestedAt">) => boolean;
   cancelOrder: (orderId: string) => boolean;
   cartToast: CartToast | null;
@@ -82,7 +86,7 @@ const seededOrders: Order[] = [
     status: "delivered",
   },
 ];
-const initialData: StoreData = { cart: [], lists: { "Shopping List": [] }, orders: seededOrders, address: null, signedIn: false, accountName: "" };
+const initialData: StoreData = { cart: [], lists: { "Shopping List": [] }, orders: seededOrders, address: null, signedIn: false, accountName: "", promoCode: "" };
 const StoreContext = createContext<StoreContextType | null>(null);
 const priceById = Object.fromEntries(products.map((product) => [product.id, product.price]));
 
@@ -136,6 +140,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   }, []);
   const saveAddress = useCallback((address: ShippingAddress) => {
     setData((previous) => ({ ...previous, address }));
+  }, []);
+  const applyPromoCode = useCallback((code: string) => {
+    const subtotal = data.cart.reduce((sum, line) => sum + line.quantity * (priceById[line.productId] ?? 0), 0);
+    const result = getPromoDiscount(code, subtotal, Date.now());
+    if (result.ok) setData((previous) => ({ ...previous, promoCode: result.code }));
+    return result;
+  }, [data.cart]);
+  const removePromoCode = useCallback(() => {
+    setData((previous) => ({ ...previous, promoCode: "" }));
   }, []);
   const requestReturn = useCallback((orderId: string, request: Omit<ReturnRequest, "id" | "requestedAt">) => {
     const order = data.orders.find((item) => item.id === orderId);
@@ -202,8 +215,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       (sum, line) => sum + line.quantity * (priceById[line.productId] ?? 0),
       0,
     );
-    const tax = Number((subtotal * 0.085).toFixed(2));
-    const total = Number((subtotal + tax).toFixed(2));
+    const promo = data.promoCode ? getPromoDiscount(data.promoCode, subtotal, Date.now()) : null;
+    if (promo && !promo.ok) return null;
+    const discountAmount = promo?.ok ? promo.discountAmount : 0;
+    const taxableSubtotal = subtotal - discountAmount;
+    const tax = Number((taxableSubtotal * 0.085).toFixed(2));
+    const total = Number((taxableSubtotal + tax).toFixed(2));
     if (!Number.isFinite(total) || total <= 0) return null;
     const order: Order = {
       id: `ORD-${Date.now().toString(36).toUpperCase()}`,
@@ -215,14 +232,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       tax,
       total,
       status: "processing",
+      ...(promo?.ok ? { discountCode: promo.code, discountAmount: promo.discountAmount } : {}),
     };
-    setData((previous) => ({ ...previous, cart: [], address, orders: [order, ...previous.orders] }));
+    setData((previous) => ({ ...previous, cart: [], address, promoCode: "", orders: [order, ...previous.orders] }));
     return order.id;
   }, [data]);
 
   const value = useMemo(
-    () => ({ ...data, ready, currentTime, cartToast, addToCart, dismissCartToast, signIn, signOut, saveAddress, requestReturn, cancelOrder, setQuantity, removeFromCart, saveToList, createOrder }),
-    [data, ready, currentTime, cartToast, addToCart, dismissCartToast, signIn, signOut, saveAddress, requestReturn, cancelOrder, setQuantity, removeFromCart, saveToList, createOrder],
+    () => ({ ...data, ready, currentTime, cartToast, addToCart, dismissCartToast, signIn, signOut, saveAddress, applyPromoCode, removePromoCode, requestReturn, cancelOrder, setQuantity, removeFromCart, saveToList, createOrder }),
+    [data, ready, currentTime, cartToast, addToCart, dismissCartToast, signIn, signOut, saveAddress, applyPromoCode, removePromoCode, requestReturn, cancelOrder, setQuantity, removeFromCart, saveToList, createOrder],
   );
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }

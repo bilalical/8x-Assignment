@@ -21,6 +21,7 @@ export default function OrderConfirmationPage() {
       <div className="order-details">
         <div><span>Order number</span><strong>{order.id}</strong></div>
         <div><span>Placed</span><strong>{new Date(order.placedAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</strong></div>
+        {order.discountAmount ? <div><span>Discount{order.discountCode ? ` (${order.discountCode})` : ""}</span><strong>−{formatPrice(order.discountAmount)}</strong></div> : null}
         <div><span>Order total</span><strong>{formatPrice(order.total)}</strong></div>
         <div><span>Payment</span><strong>Card ending in {order.lastFour}</strong></div>
         <div><span>Delivering to</span><strong>{order.address.fullName}, {order.address.city}</strong></div>

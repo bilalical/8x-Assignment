@@ -5,16 +5,20 @@ import { useState } from "react";
 import { ArrowRight, Heart, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import { ProductRail } from "@/components/product-rail";
 import { AddToListModal } from "@/components/add-to-list-modal";
+import { PromoCodeField } from "@/components/promo-code-field";
 import { formatPrice, products } from "@/lib/catalog";
 import { useStore } from "@/lib/store";
+import { getPromoDiscount } from "@/lib/promotions";
 import type { Product } from "@/lib/types";
 
 export default function CartPage() {
-  const { cart, ready, setQuantity, removeFromCart } = useStore();
+  const { cart, ready, currentTime, promoCode, setQuantity, removeFromCart } = useStore();
   const [saveProduct, setSaveProduct] = useState<Product | null>(null);
   const items = cart.map((line) => ({ ...line, product: products.find((item) => item.id === line.productId) }))
     .filter((line): line is typeof line & { product: Product } => Boolean(line.product));
   const subtotal = items.reduce((sum, line) => sum + line.product.price * line.quantity, 0);
+  const promoResult = promoCode ? getPromoDiscount(promoCode, subtotal, currentTime ?? 0) : null;
+  const discount = promoResult?.ok ? promoResult.discountAmount : 0;
 
   return (
     <div className="container page-shell">
@@ -53,8 +57,10 @@ export default function CartPage() {
         {items.length > 0 && <aside className="cart-summary">
           <h2>Order summary</h2>
           <div className="subtotal-line"><span>Subtotal ({items.reduce((sum, line) => sum + line.quantity, 0)} items)</span><strong>{formatPrice(subtotal)}</strong></div>
+          <PromoCodeField subtotal={subtotal} />
+          {discount > 0 && <div className="subtotal-line promo-discount-line"><span>Discount ({promoCode})</span><strong>−{formatPrice(discount)}</strong></div>}
           <div className="subtotal-line"><span>Shipping</span><span className="muted">Calculated at checkout</span></div>
-          <div className="subtotal-line subtotal-total"><span>Estimated subtotal</span><strong>{formatPrice(subtotal)}</strong></div>
+          <div className="subtotal-line subtotal-total"><span>Estimated subtotal</span><strong>{formatPrice(subtotal - discount)}</strong></div>
           <Link href="/checkout" className="button button-primary button-wide">Continue to checkout <ArrowRight size={15} /></Link>
           <div className="cart-perk"><ShoppingBag size={16} /><span>Your cart stays saved on this device while you browse.</span></div>
         </aside>}

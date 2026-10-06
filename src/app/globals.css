@@ -405,6 +405,17 @@ body:has(.checkout-page) .site-footer { display: none; }
 .return-status-note > span { color: var(--muted); }
 .return-status-note > a { margin-left: auto; color: #1768a3; }
 .order-action-message { margin: -7px 0 18px; font-size: 13px; }
+.promo-code-field { margin: 14px 0; padding: 13px 0; border-block: 1px solid var(--line); }
+.promo-code-form { display: grid; gap: 7px; font-size: 12px; font-weight: 700; }
+.promo-code-entry { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 7px; }
+.promo-code-entry input { min-width: 0; min-height: 38px; padding: 7px 9px; border: 1px solid #cbd5d9; border-radius: 7px; font-size: 12px; }
+.promo-code-entry .button { min-height: 38px; padding-inline: 12px; font-size: 12px; }
+.promo-code-entry .button:disabled { cursor: not-allowed; opacity: .55; }
+.promo-applied { display: flex; align-items: center; justify-content: space-between; gap: 7px; margin-top: 8px; color: var(--success); font-size: 11px; font-weight: 700; }
+.promo-applied.promo-invalid, .promo-message { color: #a32b23; }
+.promo-applied .link-button { flex: 0 0 auto; font-size: 11px; }
+.promo-message { margin: 7px 0 0; font-size: 11px; line-height: 1.4; }
+.promo-discount-line { color: var(--success); }
 .cart-toast { position: fixed; right: 20px; bottom: 20px; z-index: 90; width: min(370px, calc(100vw - 28px)); padding: 16px; border: 1px solid var(--line); border-radius: 14px; background: white; box-shadow: 0 14px 42px rgba(16,24,32,.24); animation: cart-toast-enter .24s ease-out both; }
 .cart-toast-heading, .cart-toast-heading > span { display: flex; align-items: center; }
 .cart-toast-heading { justify-content: space-between; gap: 10px; color: var(--success); font-size: 14px; font-weight: 750; }
