@@ -34,5 +34,10 @@ export type Order = {
   items: CartLine[];
   address: ShippingAddress;
   lastFour: string;
+  subtotal: number;
+  tax: number;
   total: number;
+  status: "processing" | "shipped" | "delivered" | "cancelled";
+  discountCode?: string;
+  discountAmount?: number;
 };

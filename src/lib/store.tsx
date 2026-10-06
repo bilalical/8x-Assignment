@@ -30,7 +30,56 @@ type StoreContextType = StoreData & {
 };
 
 const STORAGE_KEY = "everyday-market-store-v1";
-const initialData: StoreData = { cart: [], lists: { "Shopping List": [] }, orders: [], address: null, signedIn: false, accountName: "" };
+const seedAddress: ShippingAddress = {
+  fullName: "Casey Morgan",
+  street: "72 Oak Lane",
+  apartment: "",
+  city: "Burlington",
+  state: "VT",
+  zip: "05401",
+  phone: "802-555-0100",
+};
+const orderDate = (daysAgo: number) => {
+  const date = new Date();
+  date.setDate(date.getDate() - daysAgo);
+  return date.toISOString();
+};
+const seededOrders: Order[] = [
+  {
+    id: "ORD-PAST-DELIVERED",
+    placedAt: orderDate(8),
+    items: [{ productId: "linen-throw", quantity: 1 }, { productId: "ceramic-mug", quantity: 2 }],
+    address: seedAddress,
+    lastFour: "4242",
+    subtotal: 110.99,
+    tax: 9.43,
+    total: 120.42,
+    status: "delivered",
+  },
+  {
+    id: "ORD-PAST-SHIPPED",
+    placedAt: orderDate(12),
+    items: [{ productId: "trail-bottle", quantity: 1 }],
+    address: seedAddress,
+    lastFour: "4242",
+    subtotal: 31.95,
+    tax: 2.72,
+    total: 34.67,
+    status: "shipped",
+  },
+  {
+    id: "ORD-PAST-OLDER",
+    placedAt: orderDate(48),
+    items: [{ productId: "desk-lamp", quantity: 1 }],
+    address: seedAddress,
+    lastFour: "4242",
+    subtotal: 42.5,
+    tax: 3.61,
+    total: 46.11,
+    status: "delivered",
+  },
+];
+const initialData: StoreData = { cart: [], lists: { "Shopping List": [] }, orders: seededOrders, address: null, signedIn: false, accountName: "" };
 const StoreContext = createContext<StoreContextType | null>(null);
 const priceById = Object.fromEntries(products.map((product) => [product.id, product.price]));
 
@@ -109,10 +158,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const createOrder = useCallback((address: ShippingAddress, card: string) => {
     if (!data.cart.length) return null;
-    const total = data.cart.reduce(
+    const subtotal = data.cart.reduce(
       (sum, line) => sum + line.quantity * (priceById[line.productId] ?? 0),
       0,
     );
+    const tax = Number((subtotal * 0.085).toFixed(2));
+    const total = Number((subtotal + tax).toFixed(2));
     if (!Number.isFinite(total) || total <= 0) return null;
     const order: Order = {
       id: `ORD-${Date.now().toString(36).toUpperCase()}`,
@@ -120,7 +171,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       items: data.cart,
       address,
       lastFour: card.replace(/\D/g, "").slice(-4),
+      subtotal,
+      tax,
       total,
+      status: "processing",
     };
     setData((previous) => ({ ...previous, cart: [], address, orders: [order, ...previous.orders] }));
     return order.id;
